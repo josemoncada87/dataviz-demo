@@ -1,0 +1,433 @@
+<title>Tablero guiado Café Farallones</title>
+<meta name="description" content="Guía de clase de 90 minutos para construir con IA un tablero HTML que carga datos de Excel o CSV.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+
+<div class="reporte">
+
+  <!-- ================= HEADER ================= -->
+  <div class="report-header">
+    <div class="report-header__top">
+      <div class="report-header__logo">
+        <img src="logo-icesi-negativo.svg" alt="Universidad Icesi">
+      </div>
+      <div class="report-header__meta">
+        <span class="report-header__meta-label">Curso</span>
+        <span class="report-header__meta-value">Visualización y Data Storytelling</span>
+      </div>
+    </div>
+    <div class="report-header__title-block">
+      <span class="report-header__eyebrow">Ejercicio práctico · Tableros con IA</span>
+      <h1 class="report-header__title">Tablero guiado con IA: Café Farallones</h1>
+      <p class="report-header__subtitle">Vas a diseñar y construir, con apoyo de Claude y Claude Code, un tablero HTML que carga un Excel o un CSV y ayuda a la gerencia a tomar decisiones. La IA escribe el código; las decisiones de diseño son tuyas.</p>
+    </div>
+    <div class="report-header__kpi-bar">
+      <div class="report-header__kpi-item">
+        <span class="report-header__kpi-value">90 min</span>
+        <span class="report-header__kpi-label">Duración de la sesión</span>
+      </div>
+      <div class="report-header__kpi-item">
+        <span class="report-header__kpi-value">5.637</span>
+        <span class="report-header__kpi-label">Líneas de venta, ene–jun 2026</span>
+      </div>
+      <div class="report-header__kpi-item">
+        <span class="report-header__kpi-value">27</span>
+        <span class="report-header__kpi-label">Columnas de tipos muy distintos</span>
+      </div>
+      <div class="report-header__kpi-item">
+        <span class="report-header__kpi-value">3 de 7</span>
+        <span class="report-header__kpi-label">Preguntas de negocio que responderás</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="reporte-body">
+
+    <!-- ================= EL RETO ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">El reto</span>
+        <h2 class="section-title__heading">La gerencia necesita decidir, no mirar gráficos</h2>
+      </div>
+      <p>Café Farallones es una cadena caleña con cinco sedes: Centro, Granada, San Antonio, Ciudad Jardín y El Peñón, que abrió en marzo. La gerente de operaciones prepara el plan del segundo semestre y te pide un tablero que pueda reutilizar cada mes: lo abre, carga el archivo de ventas del periodo y responde sus preguntas en la reunión del lunes.</p>
+      <div class="cita">
+        <span class="cita__texto">«No quiero ver todo lo que tienen los datos. Quiero saber qué hago con mi plata y con mi gente el próximo semestre.»</span>
+        <span class="cita__fuente">Gerente de operaciones, Café Farallones</span>
+      </div>
+      <p>Trabaja en parejas o tríos. Al final de la sesión entregas:</p>
+      <div class="grid-2">
+        <div class="kpi-card kpi-card--blue">
+          <span class="kpi-card__label">Archivo de diseño</span>
+          <span class="kpi-card__value">DESIGN.md</span>
+          <span class="kpi-card__desc">Tus decisiones: audiencia, preguntas, tipos de datos, gráficos, color, ejes, layout y bitácora de uso de IA.</span>
+        </div>
+        <div class="kpi-card kpi-card--blue">
+          <span class="kpi-card__label">Tablero</span>
+          <span class="kpi-card__value">index.html</span>
+          <span class="kpi-card__desc">Un solo archivo que carga el .xlsx o el .csv y responde tres preguntas de negocio con una decisión clara.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= AGENDA ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Agenda</span>
+        <h2 class="section-title__heading">Cinco pasos en 90 minutos</h2>
+        <p class="section-title__desc">Los tiempos son una guía. Si un paso se alarga, recorta la construcción, nunca la reflexión ni la crítica.</p>
+      </div>
+      <div class="timeline">
+        <div class="timeline__item">
+          <div class="timeline__dot timeline__dot--gray"><span>0</span></div>
+          <div class="timeline__content">
+            <span class="timeline__fecha">Min 0–10</span>
+            <span class="timeline__titulo">Contexto y preparación</span>
+            <p class="timeline__desc">Lee el reto, descarga los archivos, abre Claude.ai o la terminal con Claude Code.</p>
+          </div>
+        </div>
+        <div class="timeline__item">
+          <div class="timeline__dot"><span>1</span></div>
+          <div class="timeline__content">
+            <span class="timeline__fecha">Min 10–25</span>
+            <span class="timeline__titulo">Conoce los datos</span>
+            <p class="timeline__desc">Clasifica las columnas tú primero y luego contrasta con la IA. Busca las trampas.</p>
+          </div>
+        </div>
+        <div class="timeline__item">
+          <div class="timeline__dot"><span>2</span></div>
+          <div class="timeline__content">
+            <span class="timeline__fecha">Min 25–40</span>
+            <span class="timeline__titulo">Elige preguntas y escribe el DESIGN.md</span>
+            <p class="timeline__desc">Tres preguntas de negocio, un gráfico por pregunta y todas las reglas de color y ejes.</p>
+          </div>
+        </div>
+        <div class="timeline__item">
+          <div class="timeline__dot"><span>3</span></div>
+          <div class="timeline__content">
+            <span class="timeline__fecha">Min 40–70</span>
+            <span class="timeline__titulo">Construye con IA</span>
+            <p class="timeline__desc">Claude o Claude Code genera el tablero a partir de tu DESIGN.md.</p>
+          </div>
+        </div>
+        <div class="timeline__item">
+          <div class="timeline__dot timeline__dot--orange"><span>4</span></div>
+          <div class="timeline__content">
+            <span class="timeline__fecha">Min 70–82</span>
+            <span class="timeline__titulo">Critica e itera</span>
+            <p class="timeline__desc">Lista de chequeo del curso, prueba de los 5 segundos con otro equipo y correcciones.</p>
+          </div>
+        </div>
+        <div class="timeline__item">
+          <div class="timeline__dot timeline__dot--green"><span>5</span></div>
+          <div class="timeline__content">
+            <span class="timeline__fecha">Min 82–90</span>
+            <span class="timeline__titulo">Presenta la decisión</span>
+            <p class="timeline__desc">Un minuto por equipo: pregunta, gráfico y decisión recomendada.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MATERIALES ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Paso 0 · Min 0–10</span>
+        <h2 class="section-title__heading">Materiales y herramientas</h2>
+      </div>
+      <p>Descarga estos archivos desde la plataforma del curso y guárdalos en una carpeta nueva, por ejemplo <code>tablero-cafe</code>.</p>
+      <div class="tabla-wrapper">
+        <table class="tabla-datos tabla-datos--striped">
+          <thead><tr><th>Archivo</th><th>Qué contiene</th></tr></thead>
+          <tbody>
+            <tr><td><code>cafe_farallones_ventas_2026S1.xlsx</code></td><td>Hoja <b>ventas</b> (5.637 filas), hoja <b>sedes</b> (apertura, mesas, baristas por turno) y hoja <b>diccionario</b> con la descripción de cada columna.</td></tr>
+            <tr><td><code>cafe_farallones_ventas_2026S1.csv</code></td><td>La misma hoja de ventas en CSV (UTF-8, separado por comas). Tu tablero debe aceptar los dos formatos.</td></tr>
+            <tr><td><code>DESIGN_plantilla.md</code></td><td>La plantilla del archivo de diseño que vas a llenar en el paso 2.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Elige una de dos rutas. Las dos llegan al mismo entregable.</p>
+      <div class="grid-2">
+        <div class="kpi-card kpi-card--tint-blue">
+          <span class="kpi-card__label">Ruta A</span>
+          <span class="kpi-card__value">Claude.ai</span>
+          <span class="kpi-card__desc">Todo en el navegador. Adjuntas archivos en el chat y Claude te devuelve el tablero como artifact, y desde ahí copias o descargas su código HTML. No necesitas instalar nada.</span>
+        </div>
+        <div class="kpi-card kpi-card--tint-purple">
+          <span class="kpi-card__label">Ruta B</span>
+          <span class="kpi-card__value">Claude Code</span>
+          <span class="kpi-card__desc">En la terminal, dentro de tu carpeta. Claude lee el DESIGN.md y los datos directamente y escribe <code>index.html</code> en disco. Ideal si ya lo tienes instalado.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PASO 1 ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Paso 1 · Min 10–25</span>
+        <h2 class="section-title__heading">Conoce los datos antes de pedir un solo gráfico</h2>
+        <p class="section-title__desc">El tipo de dato decide el gráfico. Si te saltas este paso, la IA decidirá por ti.</p>
+      </div>
+      <ol class="lista-numerada">
+        <li>Abre el Excel y revisa la hoja <b>diccionario</b>. <b>Sin IA</b>, clasifica al menos 12 columnas en la tabla de la sección 3 de tu DESIGN.md: continua, discreta, nominal, ordinal, temporal, texto libre o identificador.</li>
+        <li>Para cada columna ordinal, escribe su orden natural. Pista: hay más ordinales de las que parece.</li>
+        <li>Ahora contrasta con la IA usando el prompt de abajo. Adjunta el CSV en Claude.ai, o ejecútalo en Claude Code dentro de tu carpeta.</li>
+        <li>Anota dónde no estás de acuerdo con la IA y quién tiene la razón. Eso va a tu bitácora.</li>
+      </ol>
+      <div class="prompt">
+        <div class="prompt__bar"><span>Prompt 1 · Exploración</span><button class="prompt__copy" type="button">Copiar</button></div>
+<pre>Actúa como analista de datos. Te comparto cafe_farallones_ventas_2026S1.csv: ventas de una cadena de cafeterías de Cali entre enero y junio de 2026.
+
+Antes de proponer cualquier gráfico:
+1. Lista cada columna con su tipo (continua, discreta, nominal, ordinal, temporal, texto libre o identificador) y justifícalo en una línea.
+2. Para las columnas ordinales, indica su orden natural.
+3. Señala vacíos, valores atípicos, periodos incompletos o cualquier cosa que pueda distorsionar un gráfico o un promedio.
+4. No propongas gráficos todavía.
+
+Responde en una tabla.</pre>
+      </div>
+      <div class="alerta alerta--advertencia">
+        <span class="alerta__titulo">Hay al menos seis trampas en estos datos</span>
+        <p class="alerta__texto">Son situaciones reales que arruinan un gráfico: órdenes que no son alfabéticos, periodos que no son comparables, valores que no son ceros, unos pocos registros que pesan demasiado y una escala que parece numérica pero no lo es. Encuéntralas y escribe en el DESIGN.md cómo las vas a tratar.</p>
+      </div>
+      <div class="section section--tinted">
+        <div class="section-title section-title--compact">
+          <h3 class="section-title__heading">Para reflexionar en equipo</h3>
+        </div>
+        <ul class="lista-icesi">
+          <li>¿Qué columnas parecen números pero no deberían promediarse sin pensarlo dos veces?</li>
+          <li>Si comparas las ventas totales de dos sedes, ¿estás comparando lo mismo? Revisa la hoja <b>sedes</b>.</li>
+          <li>¿Qué significa una celda vacía en <code>tamano</code>, en <code>tiempo_espera_min</code> y en <code>satisfaccion</code>? ¿Es lo mismo en las tres?</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ================= PASO 2 ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Paso 2 · Min 25–40</span>
+        <h2 class="section-title__heading">Elige tres preguntas y decide cómo responderlas</h2>
+        <p class="section-title__desc">Cada pregunta termina en una decisión. Si tu gráfico no ayuda a tomarla, sobra.</p>
+      </div>
+      <div class="tabla-wrapper">
+        <table class="tabla-datos">
+          <thead><tr><th>#</th><th>Pregunta de la gerencia</th><th>Decisión que debe tomar</th></tr></thead>
+          <tbody>
+            <tr><td class="text-bold">P1</td><td>Podemos contratar un barista adicional para una sola sede y una franja del día. ¿Dónde y cuándo?</td><td>Asignar el nuevo cargo</td></tr>
+            <tr><td class="text-bold">P2</td><td>El Peñón abrió en marzo y la junta pregunta si fue un error. ¿Qué le respondemos?</td><td>Mantener, ajustar o cerrar la sede</td></tr>
+            <tr><td class="text-bold">P3</td><td>La App da 15 % de descuento desde febrero. ¿Lo mantenemos, lo ajustamos o lo eliminamos?</td><td>Política de descuentos del segundo semestre</td></tr>
+            <tr><td class="text-bold">P4</td><td>Se acerca otra temporada de lluvias. ¿Qué cambiamos en inventario y domicilios?</td><td>Plan operativo para días de lluvia</td></tr>
+            <tr><td class="text-bold">P5</td><td>El menú tiene 24 productos y queremos simplificarlo. ¿Cuáles salen?</td><td>Nuevo menú</td></tr>
+            <tr><td class="text-bold">P6</td><td>¿Cómo redistribuimos el personal entre sedes según el día de la semana?</td><td>Turnos y horarios por sede</td></tr>
+            <tr><td class="text-bold">P7</td><td><span class="badge badge--yellow">Bonus</span> ¿Quiénes son nuestros clientes de mayor valor y qué tan satisfechos están?</td><td>Foco del programa de fidelización</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alerta alerta--info">
+        <span class="alerta__titulo">Regla de selección</span>
+        <p class="alerta__texto">Entre tus tres preguntas debe haber al menos una que use una variable temporal u ordinal (fecha, mes, día de la semana, franja), una que use una variable cualitativa difícil (satisfacción, comentarios o rango de edad) y una que compare sedes.</p>
+      </div>
+      <p>Llena las secciones 1 a 8 de <code>DESIGN_plantilla.md</code> y renómbralo <code>DESIGN.md</code>. Cuando lo tengas, pídele a la IA que lo critique, no que lo reescriba.</p>
+      <div class="prompt">
+        <div class="prompt__bar"><span>Prompt 2 · La IA como crítica</span><button class="prompt__copy" type="button">Copiar</button></div>
+<pre>Te comparto mi DESIGN.md para un tablero de ventas de una cadena de cafeterías y los datos que usará. Actúa como una crítica exigente de visualización de datos.
+
+Para cada pregunta de negocio:
+1. ¿El gráfico que elegí ayuda a tomar la decisión? Justifica.
+2. ¿Qué alternativa considerarías y por qué?
+3. ¿Qué riesgo de lectura engañosa ves (ejes, orden de categorías, color, agregación, periodos no comparables)?
+
+No reescribas el archivo. Dame una lista de observaciones, de la más grave a la menos grave.</pre>
+      </div>
+      <div class="highlight-box highlight-box--yellow">
+        <span class="highlight-box__label">Tú decides</span>
+        <span class="highlight-box__texto">Acepta solo las observaciones que puedas defender. Las que rechaces también van a la bitácora, con tu razón.</span>
+      </div>
+    </div>
+
+    <!-- ================= PASO 3 ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Paso 3 · Min 40–70</span>
+        <h2 class="section-title__heading">Construye el tablero a partir de tu DESIGN.md</h2>
+        <p class="section-title__desc">Primero la carga de datos y los KPIs; después un gráfico por pregunta. Pide un cambio por mensaje.</p>
+      </div>
+
+      <div class="divider-label"><span>Ruta A · Claude.ai</span></div>
+      <p>Abre un chat nuevo, adjunta <code>DESIGN.md</code> y el CSV, y usa este prompt. Cuando aparezca el artifact, pruébalo cargando el archivo con el botón del propio tablero.</p>
+      <div class="prompt">
+        <div class="prompt__bar"><span>Prompt 3A · Construcción en Claude.ai</span><button class="prompt__copy" type="button">Copiar</button></div>
+<pre>Construye un tablero en un solo archivo HTML siguiendo estrictamente el DESIGN.md adjunto. El CSV adjunto es solo para que conozcas la estructura: el tablero no debe traer datos incrustados.
+
+Requisitos:
+- Un botón para cargar un archivo .xlsx o .csv. Usa SheetJS para Excel (hoja "ventas") y PapaParse para CSV, cargados por CDN.
+- Valida que existan las columnas que necesitas y, si falta alguna, muestra cuáles faltan.
+- Calcula todo en el navegador a partir del archivo cargado.
+- Usa Chart.js para los gráficos.
+- Respeta el orden de las categorías ordinales, la paleta, los formatos de pesos colombianos y las reglas de limpieza del DESIGN.md.
+- Cada gráfico lleva como título la conclusión que definí en el DESIGN.md.
+
+Empieza por la carga de datos y la fila de KPIs. Luego agrega un gráfico por pregunta, en el orden del DESIGN.md.</pre>
+      </div>
+
+      <div class="divider-label"><span>Ruta B · Claude Code</span></div>
+      <p>En la terminal, dentro de tu carpeta con <code>DESIGN.md</code> y los datos, ejecuta <code>claude</code>. Pide primero un plan y revísalo antes de que escriba código; puedes activar el modo plan con <code>Shift + Tab</code>.</p>
+      <div class="prompt">
+        <div class="prompt__bar"><span>Prompt 3B · Construcción en Claude Code</span><button class="prompt__copy" type="button">Copiar</button></div>
+<pre>Lee DESIGN.md y revisa la estructura de cafe_farallones_ventas_2026S1.xlsx (hojas ventas y sedes) y del CSV.
+
+Antes de escribir código, propón un plan corto: qué cálculos harás para cada pregunta, qué librerías cargarás por CDN y cómo validarás las columnas. Espera mi aprobación.
+
+Después crea index.html, un solo archivo que:
+- Carga .xlsx (con SheetJS) o .csv (con PapaParse) desde un botón.
+- Valida columnas y avisa cuáles faltan.
+- Calcula todo en el navegador, sin datos incrustados.
+- Grafica con Chart.js siguiendo la paleta, el orden de categorías, los formatos y las reglas de limpieza del DESIGN.md.
+
+Cuando termines, dime cómo probarlo con los dos archivos.</pre>
+      </div>
+
+      <div class="alerta alerta--critica">
+        <span class="alerta__titulo">Si la IA contradice tu DESIGN.md</span>
+        <p class="alerta__texto">No lo aceptes en silencio. Cítale la sección exacta («Según la sección 6, los días van de lunes a domingo») o actualiza el DESIGN.md si cambiaste de opinión. El archivo de diseño es la fuente de verdad.</p>
+      </div>
+    </div>
+
+    <!-- ================= PASO 4 ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Paso 4 · Min 70–82</span>
+        <h2 class="section-title__heading">Critica e itera con lo visto en el curso</h2>
+        <p class="section-title__desc">Recorre la lista con el tablero abierto. Cada casilla sin marcar es un prompt de corrección.</p>
+      </div>
+      <div class="grid-2">
+        <div class="section">
+          <span class="text-label">Selección de gráficos</span>
+          <ul class="checklist">
+            <li><label><input type="checkbox" id="c1"><span>Cada gráfico responde una de mis tres preguntas.</span></label></li>
+            <li><label><input type="checkbox" id="c2"><span>El gráfico coincide con la intención: comparar, tendencia, distribución, relación o composición.</span></label></li>
+            <li><label><input type="checkbox" id="c3"><span>No hay tortas con más de cuatro porciones ni gráficos 3D.</span></label></li>
+          </ul>
+        </div>
+        <div class="section">
+          <span class="text-label">Color</span>
+          <ul class="checklist">
+            <li><label><input type="checkbox" id="c4"><span>El color de acento señala solo lo que quiero que miren.</span></label></li>
+            <li><label><input type="checkbox" id="c5"><span>Una misma categoría tiene el mismo color en todos los gráficos.</span></label></li>
+            <li><label><input type="checkbox" id="c6"><span>Se entiende en escala de grises y el texto tiene buen contraste.</span></label></li>
+          </ul>
+        </div>
+        <div class="section">
+          <span class="text-label">Ejes y referencias</span>
+          <ul class="checklist">
+            <li><label><input type="checkbox" id="c7"><span>Las barras parten de cero.</span></label></li>
+            <li><label><input type="checkbox" id="c8"><span>Días, meses, franjas, edades y satisfacción respetan su orden natural.</span></label></li>
+            <li><label><input type="checkbox" id="c9"><span>Hay unidades, formato de pesos y al menos una línea de referencia o anotación útil.</span></label></li>
+            <li><label><input type="checkbox" id="c10"><span>Las comparaciones entre sedes son justas y los atípicos están tratados.</span></label></li>
+          </ul>
+        </div>
+        <div class="section">
+          <span class="text-label">Narrativa, layout e interactividad</span>
+          <ul class="checklist">
+            <li><label><input type="checkbox" id="c11"><span>Cada título es una conclusión, no una descripción.</span></label></li>
+            <li><label><input type="checkbox" id="c12"><span>Lo más importante está arriba a la izquierda; los KPIs dan contexto.</span></label></li>
+            <li><label><input type="checkbox" id="c13"><span>Los filtros actualizan todos los gráficos y el tablero funciona con el .xlsx y con el .csv.</span></label></li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight-box highlight-box--purple">
+        <span class="highlight-box__label">Prueba de los 5 segundos</span>
+        <span class="highlight-box__texto">Muéstrale tu tablero a otro equipo durante cinco segundos y ciérralo. Pregúntales qué decisión recomienda. Si no coincide con tu mensaje principal, ajusta jerarquía, color o títulos.</span>
+      </div>
+    </div>
+
+    <!-- ================= PASO 5 ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Paso 5 · Min 82–90</span>
+        <h2 class="section-title__heading">Presenta la decisión y entrega</h2>
+      </div>
+      <div class="grid-3">
+        <div class="kpi-card kpi-card--green">
+          <span class="kpi-card__label">15 segundos</span>
+          <span class="kpi-card__value">Pregunta</span>
+          <span class="kpi-card__desc">Cuál elegiste y qué decisión habilita.</span>
+        </div>
+        <div class="kpi-card kpi-card--green">
+          <span class="kpi-card__label">30 segundos</span>
+          <span class="kpi-card__value">Evidencia</span>
+          <span class="kpi-card__desc">El gráfico y la cifra que lo sostiene. Una decisión de diseño que tomaste a propósito.</span>
+        </div>
+        <div class="kpi-card kpi-card--green">
+          <span class="kpi-card__label">15 segundos</span>
+          <span class="kpi-card__value">Decisión</span>
+          <span class="kpi-card__desc">Qué recomiendas hacer el próximo semestre.</span>
+        </div>
+      </div>
+      <p>Sube a la plataforma una carpeta comprimida con <code>DESIGN.md</code> (incluida la bitácora y la autoevaluación) e <code>index.html</code>.</p>
+    </div>
+
+    <!-- ================= REFLEXIÓN ================= -->
+    <div class="section section--tinted">
+      <div class="section-title section-title--compact">
+        <span class="section-title__label">Para cerrar</span>
+        <h3 class="section-title__heading">Preguntas de reflexión individual</h3>
+      </div>
+      <ul class="lista-icesi">
+        <li>¿Qué decisión de diseño habría tomado distinto la IA si no le hubieras dado un DESIGN.md?</li>
+        <li>¿En qué momento la IA te propuso un gráfico correcto técnicamente pero inútil para la decisión?</li>
+        <li>De lo visto en el curso (selección de gráficos, color, ejes, narrativa, interactividad), ¿qué tema te ayudó más a corregir a la IA?</li>
+        <li>Si el archivo de julio trae una sede nueva o una columna con otro nombre, ¿qué pasaría con tu tablero?</li>
+      </ul>
+    </div>
+
+    <!-- ================= RÚBRICA ================= -->
+    <div class="section">
+      <div class="section-title">
+        <span class="section-title__label">Evaluación</span>
+        <h2 class="section-title__heading">Rúbrica</h2>
+      </div>
+      <div class="tabla-wrapper">
+        <table class="tabla-datos tabla-datos--striped">
+          <thead><tr><th>Criterio</th><th class="num">Puntos</th><th>Nivel excelente</th></tr></thead>
+          <tbody>
+            <tr><td>DESIGN.md completo y coherente con el tablero</td><td class="num">20</td><td>Cada decisión visible en el tablero está justificada en el archivo.</td></tr>
+            <tr><td>Respuesta a las preguntas de negocio</td><td class="num">25</td><td>Tres preguntas respondidas con cifra, gráfico y decisión.</td></tr>
+            <tr><td>Selección de gráficos</td><td class="num">15</td><td>Intención y gráfico coinciden; las alternativas descartadas tienen razón.</td></tr>
+            <tr><td>Color y ejes</td><td class="num">15</td><td>Acento con intención, barras desde cero, ordinales en orden, formatos en COP.</td></tr>
+            <tr><td>Narrativa y layout</td><td class="num">15</td><td>Títulos que concluyen, jerarquía clara y KPIs pertinentes.</td></tr>
+            <tr><td>Uso crítico de la IA</td><td class="num">10</td><td>La bitácora muestra correcciones propias, no solo aceptación.</td></tr>
+          </tbody>
+          <tfoot><tr><td>Total</td><td class="num">100</td><td></td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <div class="report-footer">
+    <img src="logo-icesi-negativo.svg" alt="Universidad Icesi">
+    <span class="report-footer__info">Visualización y Data Storytelling · Ejercicio guiado con IA · Datos ficticios con fines académicos</span>
+    <span class="report-footer__url">icesi.edu.co</span>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.prompt__copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = btn.closest('.prompt').querySelector('pre');
+      var done = function () { btn.textContent = 'Copiado'; setTimeout(function () { btn.textContent = 'Copiar'; }, 1600); };
+      var fallback = function () {
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent = 'Seleccionado';
+        setTimeout(function () { btn.textContent = 'Copiar'; }, 1600);
+      };
+      try {
+        navigator.clipboard.writeText(pre.textContent).then(done, fallback);
+      } catch (e) { fallback(); }
+    });
+  });
+</script>

@@ -1,0 +1,988 @@
+<meta charset="utf-8">
+<title>Tablero Café Farallones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: encabezado con mensaje principal → fila de KPIs → una sección por pregunta (gráfico + decisiones de diseño) → trampas tratadas.
+   Tema único claro, deliberado: es un tablero para proyectar en reunión. */
+:root {
+  color-scheme: light;
+  --bg: #f4f4f8;
+  --surface: #ffffff;
+  --ink: #1d1d2c;
+  --ink-2: #555668;
+  --ink-3: #8a8b9c;
+  --line: #e4e4ec;
+  --accent: #5454e9;        /* lo que quiero que miren */
+  --accent-soft: #ececfd;
+  --context: #b5b6c4;       /* contexto: el resto */
+  --warn: #e9683b;          /* alerta / calificación negativa */
+  --warn-soft: #fcece5;
+  --ok: #2f8f57;
+  --note: #fff8d6;
+  --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.55; padding-inline: 16px; padding-block: 24px 48px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.2; }
+p { margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Encabezado */
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: end; }
+@media (max-width: 760px) { .top { grid-template-columns: minmax(0, 1fr); } }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.top h1 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -.02em; margin-top: 6px; }
+.bigidea { font-size: clamp(16px, 2vw, 19px); color: var(--ink-2); margin-top: 10px; max-width: 70ch; }
+.bigidea b { color: var(--ink); }
+.loader { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.btn { font: inherit; font-weight: 700; background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; cursor: pointer; }
+.btn:hover { background: #3f3fd6; }
+.status { font-size: 13px; color: var(--ink-2); max-width: 340px; }
+.status.err { color: #b4481f; font-weight: 600; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+.toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+/* KPIs */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 900px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .kpis { grid-template-columns: minmax(0, 1fr); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kpi__label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.kpi__value { font-size: clamp(24px, 3vw, 32px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.kpi__value.is-warn { color: var(--warn); }
+.kpi__value.is-accent { color: var(--accent); }
+.kpi__ctx { font-size: 13px; color: var(--ink-2); }
+.chip { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 9px; border-radius: 999px; margin-right: 4px; }
+.chip--warn { background: var(--warn-soft); color: #b4481f; }
+.chip--ok { background: #e6f5ec; color: var(--ok); }
+
+/* Secciones de pregunta */
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: clamp(16px, 3vw, 28px); display: flex; flex-direction: column; gap: 18px; }
+.q__head { display: flex; flex-direction: column; gap: 4px; }
+.q__tag { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.q__title { font-size: clamp(19px, 2.4vw, 24px); font-weight: 800; letter-spacing: -.01em; }
+.q__sub { color: var(--ink-2); max-width: 75ch; }
+.q__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .q__grid { grid-template-columns: minmax(0, 1fr); } }
+.fig { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.fig__title { font-weight: 700; font-size: 15px; }
+.fig__note { font-size: 12.5px; color: var(--ink-3); }
+.canvas-box { position: relative; height: 300px; }
+.decision { background: var(--accent-soft); border-radius: 12px; padding: 14px 16px; font-size: 15px; }
+.decision b { color: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.naive-switch { align-self: flex-start; font: inherit; font-size: 13px; font-weight: 700; background: transparent; color: #b4481f; border: 1.5px solid var(--warn); border-radius: 999px; padding: 4px 14px; cursor: pointer; }
+.naive-switch[aria-pressed="true"] { background: var(--warn); color: #fff; }
+.naive-banner { background: var(--warn-soft); border-left: 4px solid var(--warn); border-radius: 0 10px 10px 0; padding: 10px 14px; font-size: 14px; }
+
+/* Explicaciones */
+details.why { border: 1px solid var(--line); border-radius: 12px; background: #fafafd; }
+details.why summary { cursor: pointer; padding: 12px 16px; font-weight: 700; font-size: 14px; color: var(--accent); list-style: none; }
+details.why summary::-webkit-details-marker { display: none; }
+details.why summary::before { content: '+ '; }
+details.why[open] summary::before { content: '− '; }
+.why__body { padding: 0 16px 16px; display: grid; gap: 10px; font-size: 14px; }
+.why__row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; }
+@media (max-width: 520px) { .why__row { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+.why__k { font-weight: 700; color: var(--ink-2); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding-top: 2px; }
+
+/* Heatmap */
+.heat-scroll { overflow-x: auto; }
+.heat { display: grid; grid-template-columns: 110px repeat(5, minmax(64px, 1fr)); gap: 3px; min-width: 460px; font-size: 13px; }
+.heat__h { font-weight: 700; color: var(--ink-2); font-size: 12px; text-align: center; padding: 4px 2px; }
+.heat__r { font-weight: 700; display: flex; align-items: center; font-size: 13px; }
+.heat__c { border-radius: 6px; height: 46px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-variant-numeric: tabular-nums; position: relative; cursor: default; }
+.heat__c.is-max { box-shadow: 0 0 0 3px var(--warn); }
+.heat-scale { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); }
+.heat-scale__bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; width: 160px; }
+.heat-scale__bar i { flex: 1; }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: #fff; font-size: 12.5px; padding: 8px 10px; border-radius: 8px; z-index: 10; max-width: 240px; line-height: 1.45; }
+
+/* Tabla de trampas */
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px; }
+th { text-align: left; background: #f0f0f7; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); padding: 10px 14px; }
+td { padding: 10px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.empty { background: var(--surface); border: 2px dashed var(--line); border-radius: 16px; padding: 40px 24px; text-align: center; color: var(--ink-2); }
+.foot { font-size: 12.5px; color: var(--ink-3); text-align: center; }
+
+.heat--7 { grid-template-columns: 110px repeat(7, minmax(52px, 1fr)); min-width: 560px; }
+.heat__c--closed { background: repeating-linear-gradient(135deg, #f3f3f6 0 6px, #e9e9ef 6px 12px); color: var(--ink-3); font-weight: 600; font-size: 12px; }
+.heat__c.is-peak { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px var(--accent); }
+.canvas-box--tall { height: 560px; }
+.canvas-box--short { height: 240px; }
+.kpis--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 700px) { .kpis--3 { grid-template-columns: minmax(0, 1fr); } }
+.chip--accent { background: var(--accent-soft); color: var(--accent); }
+table.tbl-sm { min-width: 0; font-size: 13.5px; }
+.resumen { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.resumen li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--line); }
+.resumen li:first-child { border-top: 0; }
+.resumen a { font-weight: 800; color: var(--accent); text-decoration: none; font-size: 13px; letter-spacing: .04em; }
+.resumen a:hover { text-decoration: underline; }
+.resumen b { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <span class="eyebrow">Café Farallones · Operaciones · Enero–junio 2026 · Ejemplo resuelto</span>
+      <h1>¿Qué hacemos con la plata y la gente el próximo semestre?</h1>
+      <p class="bigidea" id="bigidea">Carga el archivo de ventas para ver el mensaje principal.</p>
+    </div>
+    <div class="loader">
+      <button class="btn" id="pick" type="button">Cargar Excel o CSV</button>
+      <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+      <span class="status" id="status">Buscando los datos de ejemplo…</span>
+      <label class="toggle"><input type="checkbox" id="incl-corp"> Incluir pedidos corporativos (≥ 20 unidades)</label>
+    </div>
+  </header>
+
+  <div id="empty" class="empty" hidden>
+    <h2>Carga <code>cafe_farallones_ventas_2026S1.xlsx</code> o el .csv</h2>
+    <p>El tablero calcula todo en tu navegador. Necesita la hoja <b>ventas</b> con sus columnas originales.</p>
+  </div>
+
+  <div id="dash" hidden>
+  <div class="wrap">
+
+    <section class="kpis" aria-label="Indicadores clave">
+      <div class="kpi"><span class="kpi__label">Ventas por día · cadena</span><span class="kpi__value" id="k1">—</span><span class="kpi__ctx" id="k1c"></span></div>
+      <div class="kpi"><span class="kpi__label">Espera · Centro al almuerzo</span><span class="kpi__value is-warn" id="k2">—</span><span class="kpi__ctx" id="k2c"></span></div>
+      <div class="kpi"><span class="kpi__label">El Peñón · ventas por día</span><span class="kpi__value is-accent" id="k3">—</span><span class="kpi__ctx" id="k3c"></span></div>
+      <div class="kpi"><span class="kpi__label">App · participación último mes</span><span class="kpi__value is-accent" id="k4">—</span><span class="kpi__ctx" id="k4c"></span></div>
+    </section>
+
+    <section class="q q--compact" id="resumen" aria-label="Resumen de decisiones">
+      <div class="q__head">
+        <span class="q__tag">Resumen para la reunión</span>
+        <h2 class="q__title">Siete decisiones para el segundo semestre</h2>
+      </div>
+      <ol class="resumen" id="resumen-list"></ol>
+    </section>
+
+    <!-- ============ P1 ============ -->
+    <section class="q" id="p1">
+      <div class="q__head">
+        <span class="q__tag">P1 · Personal</span>
+        <h2 class="q__title" id="p1-title">—</h2>
+        <p class="q__sub">La gerencia puede contratar un barista adicional para una sola sede y una franja del día.</p>
+      </div>
+      <button class="naive-switch" type="button" data-naive="p1" aria-pressed="false">Ver la versión con error</button>
+      <div class="naive-banner" id="p1-naive-banner" hidden><b>Versión con error:</b> promedio de satisfacción por sede con el eje Y empezando en 3,8. Las diferencias se ven enormes, no se sabe en qué franja ocurre el problema, se promedia una escala Likert como si fuera continua y cada sede lleva un color que no significa nada.</div>
+      <div class="q__grid">
+        <div class="fig" id="p1-good-a">
+          <span class="fig__title">Mediana de minutos de espera, por sede y franja</span>
+          <div class="heat-scroll"><div class="heat" id="heat"></div></div>
+          <div class="heat-scale"><span>menos espera</span><span class="heat-scale__bar" id="heat-scale"></span><span>más espera</span></div>
+          <span class="fig__note">Sin domicilios (no tienen espera en tienda). Borde naranja: la peor celda.</span>
+        </div>
+        <div class="fig" id="p1-good-b">
+          <span class="fig__title">% de clientes insatisfechos (calificación 1–2) según minutos de espera</span>
+          <div class="canvas-box"><canvas id="c-p1"></canvas></div>
+          <span class="fig__note" id="p1-note"></span>
+        </div>
+        <div class="fig" id="p1-bad" hidden>
+          <span class="fig__title">Satisfacción promedio por sede</span>
+          <div class="canvas-box"><canvas id="c-p1-bad"></canvas></div>
+        </div>
+      </div>
+      <p class="decision" id="p1-decision"></p>
+      <details class="why">
+        <summary>Por qué se diseñó así</summary>
+        <div class="why__body">
+          <div class="why__row"><span class="why__k">Intención</span><span>Encontrar dónde se cruzan dos variables (sede y franja) y después mostrar la relación entre espera y satisfacción.</span></div>
+          <div class="why__row"><span class="why__k">Gráficos</span><span>Un <b>mapa de calor</b> porque son dos dimensiones categóricas y una medida: el ojo encuentra la celda más oscura sin leer números. Luego <b>barras por tramos de espera</b>, que convierten una variable continua sesgada en un orden que cualquiera lee.</span></div>
+          <div class="why__row"><span class="why__k">Medida</span><span><b>Mediana</b> de espera, no promedio: unos pocos clientes que esperaron 25 minutos inflan el promedio. La satisfacción se reporta como <b>% de calificaciones 1–2</b>, porque la escala Likert es ordinal.</span></div>
+          <div class="why__row"><span class="why__k">Color</span><span>Escala secuencial de un solo tono (azul claro → oscuro) para la magnitud. El naranja se reserva para lo que exige acción: la peor celda y los tramos sobre la meta de 8 minutos.</span></div>
+          <div class="why__row"><span class="why__k">Ejes y orden</span><span>Franjas en orden del día (Mañana → Noche), tramos en orden de menor a mayor espera. Barras desde cero.</span></div>
+          <div class="why__row"><span class="why__k">Descartado</span><span>Dispersión espera vs. satisfacción: con una escala de 5 valores los puntos se apilan en 5 líneas y no se lee nada. Promedio de satisfacción por sede: oculta la franja.</span></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ P2 ============ -->
+    <section class="q" id="p2">
+      <div class="q__head">
+        <span class="q__tag">P2 · Expansión</span>
+        <h2 class="q__title" id="p2-title">—</h2>
+        <p class="q__sub">El Peñón abrió el 2 de marzo y la junta pregunta si fue un error.</p>
+      </div>
+      <button class="naive-switch" type="button" data-naive="p2" aria-pressed="false">Ver la versión con error</button>
+      <div class="naive-banner" id="p2-naive-banner" hidden><b>Versión con error:</b> ventas totales del semestre por sede. El Peñón queda de última porque operó 4 meses mientras las demás operaron 6. La comparación no es justa.</div>
+      <div class="q__grid">
+        <div class="fig">
+          <span class="fig__title" id="p2-fig-title">Ventas por día abierto, por mes (miles de pesos)</span>
+          <div class="legend" id="p2-legend"></div>
+          <div class="canvas-box"><canvas id="c-p2"></canvas></div>
+          <span class="fig__note">Cada valor = ventas del mes ÷ días que la sede abrió ese mes. El Peñón no existe en enero y febrero: hay hueco, no cero.</span>
+        </div>
+        <div class="fig">
+          <span class="fig__title">Comparación de junio</span>
+          <div class="canvas-box"><canvas id="c-p2b"></canvas></div>
+          <span class="fig__note">Barras horizontales ordenadas de mayor a menor; la sede en evaluación va en azul.</span>
+        </div>
+      </div>
+      <p class="decision" id="p2-decision"></p>
+      <details class="why">
+        <summary>Por qué se diseñó así</summary>
+        <div class="why__body">
+          <div class="why__row"><span class="why__k">Intención</span><span>Tendencia en el tiempo (¿está creciendo?) y comparación justa con las demás sedes.</span></div>
+          <div class="why__row"><span class="why__k">Gráficos</span><span><b>Línea</b> porque el mes es temporal y lo que importa es la forma de la curva de arranque. <b>Barras horizontales ordenadas</b> para la foto del último mes: la longitud se compara mejor que la altura de una línea.</span></div>
+          <div class="why__row"><span class="why__k">Medida</span><span><b>Ventas por día abierto</b>, unidas con la hoja <i>sedes</i> (fecha de apertura) y los días con ventas. Así El Peñón, Centro (cierra domingos) y Granada (remodelación en mayo) se comparan en igualdad.</span></div>
+          <div class="why__row"><span class="why__k">Color</span><span><b>Destacar una, apagar el resto</b>: El Peñón en azul, las otras cuatro sedes en gris. La pregunta es sobre una sede, no sobre cinco; cinco colores competirían por atención.</span></div>
+          <div class="why__row"><span class="why__k">Ejes y orden</span><span>Meses en orden cronológico (no alfabético). Barras desde cero. Una sola escala en pesos, sin doble eje.</span></div>
+          <div class="why__row"><span class="why__k">Descartado</span><span>Ventas totales (castiga a la sede nueva). Línea de El Peñón empezando en cero en enero (inventa una caída que no existió).</span></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ P3 ============ -->
+    <section class="q" id="p3">
+      <div class="q__head">
+        <span class="q__tag">P3 · Precios</span>
+        <h2 class="q__title" id="p3-title">—</h2>
+        <p class="q__sub">La App da 15 % de descuento desde febrero. ¿Se mantiene, se ajusta o se elimina?</p>
+      </div>
+      <button class="naive-switch" type="button" data-naive="p3" aria-pressed="false">Ver la versión con error</button>
+      <div class="naive-banner" id="p3-naive-banner" hidden><b>Versión con error:</b> los meses ordenados alfabéticamente (Abril, Enero, Febrero, Junio, Marzo, Mayo). La tendencia de crecimiento desaparece.</div>
+      <div class="q__grid">
+        <div class="fig">
+          <span class="fig__title">Participación de cada canal en las ventas registradas, por mes</span>
+          <div class="legend" id="p3-legend"></div>
+          <div class="canvas-box"><canvas id="c-p3"></canvas></div>
+          <span class="fig__note">Barras apiladas al 100 %: cada mes suma lo mismo, así se compara la mezcla aunque los meses tengan distinto número de días.</span>
+        </div>
+        <div class="fig">
+          <span class="fig__title">Lo que cuesta y lo que deja</span>
+          <div class="kpis" id="p3-kpis"></div>
+          <span class="fig__note" id="p3-note"></span>
+        </div>
+      </div>
+      <p class="decision" id="p3-decision"></p>
+      <details class="why">
+        <summary>Por qué se diseñó así</summary>
+        <div class="why__body">
+          <div class="why__row"><span class="why__k">Intención</span><span>Composición en el tiempo (¿cuánto pesa la App?) y una evaluación de costo/beneficio.</span></div>
+          <div class="why__row"><span class="why__k">Gráficos</span><span><b>Barras apiladas al 100 %</b> con solo 3 categorías: es una parte de un todo que cambia mes a mes. Para el costo/beneficio, <b>cifras grandes</b> en lugar de un gráfico: son cuatro números que se leen mejor solos.</span></div>
+          <div class="why__row"><span class="why__k">Medida</span><span>Participación en líneas de venta, ticket promedio sin pedidos corporativos, descuento otorgado en pesos y ventas por día de las sedes antiguas (sin El Peñón) en el primer y el último mes, para que la sede nueva no esconda la caída.</span></div>
+          <div class="why__row"><span class="why__k">Color</span><span>App en azul (el foco), Mostrador en gris (la base) y Domicilio en naranja suave para distinguirlo. El mismo color de canal se usaría en cualquier otro gráfico del tablero.</span></div>
+          <div class="why__row"><span class="why__k">Ejes y orden</span><span>Meses en orden cronológico. La App va abajo, pegada a la base, para que su crecimiento se lea sobre una línea fija.</span></div>
+          <div class="why__row"><span class="why__k">Descartado</span><span>Tortas por mes (seis tortas no se comparan). Ventas totales por mes (febrero tiene 28 días y parece una caída).</span></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ P4 ============ -->
+    <section class="q" id="p4">
+      <div class="q__head">
+        <span class="q__tag">P4 · Clima</span>
+        <h2 class="q__title" id="p4-title">—</h2>
+        <p class="q__sub">Se acerca otra temporada de lluvias. ¿Qué cambiamos en inventario y domicilios?</p>
+      </div>
+      <button class="naive-switch" type="button" data-naive="p4" aria-pressed="false">Ver la versión con error</button>
+      <div class="naive-banner" id="p4-naive-banner" hidden><b>Versión con error:</b> conteos absolutos de ventas en días secos y con lluvia. Como hay muchos más días secos, todas las barras de lluvia se ven pequeñas y parece que la lluvia no cambia nada.</div>
+      <div class="kpis kpis--3" id="p4-kpis"></div>
+      <div class="q__grid">
+        <div class="fig">
+          <span class="fig__title" id="p4-fig-title">Mezcla de categorías: días secos vs. días con lluvia (% de las ventas de cada tipo de día)</span>
+          <div class="legend" id="p4-legend"></div>
+          <div class="canvas-box"><canvas id="c-p4"></canvas></div>
+          <span class="fig__note" id="p4-note"></span>
+        </div>
+        <div class="fig">
+          <span class="fig__title">% de bebidas frías según la temperatura del día</span>
+          <div class="canvas-box"><canvas id="c-p4b"></canvas></div>
+          <span class="fig__note">Tramos de temperatura media diaria en Cali, de más fresco a más caluroso. Rampa de un solo tono: más oscuro = más calor.</span>
+        </div>
+      </div>
+      <p class="decision" id="p4-decision"></p>
+      <details class="why">
+        <summary>Por qué se diseñó así</summary>
+        <div class="why__body">
+          <div class="why__row"><span class="why__k">Intención</span><span>Comparar la mezcla de ventas entre dos condiciones (seco y lluvia) y ver la relación con una variable continua (temperatura).</span></div>
+          <div class="why__row"><span class="why__k">Gráficos</span><span><b>Barras agrupadas</b> por categoría: dos barras lado a lado se comparan sin esfuerzo. Para la temperatura, <b>barras por tramos ordenados</b> en lugar de una dispersión con 181 días: la tendencia se lee de un vistazo.</span></div>
+          <div class="why__row"><span class="why__k">Medida</span><span><b>Proporciones dentro de cada tipo de día</b>, no conteos. Hay muchos más días secos que lluviosos, así que los conteos esconden el cambio de comportamiento.</span></div>
+          <div class="why__row"><span class="why__k">Color</span><span>Días secos en gris (la referencia) y días con lluvia en azul (el foco, y además asociado al agua). La rampa de temperatura es de un solo tono porque los tramos tienen orden.</span></div>
+          <div class="why__row"><span class="why__k">Ejes y orden</span><span>Categorías en el mismo orden en ambos grupos; tramos de temperatura de menor a mayor. Barras desde cero.</span></div>
+          <div class="why__row"><span class="why__k">Cuidado</span><span>La lluvia se concentra en marzo–mayo, cuando la App ya había crecido. Por eso la recomendación se apoya en la mezcla de productos y canales, no en las ventas totales.</span></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ P5 ============ -->
+    <section class="q" id="p5">
+      <div class="q__head">
+        <span class="q__tag">P5 · Menú</span>
+        <h2 class="q__title" id="p5-title">—</h2>
+        <p class="q__sub">El menú tiene 24 productos y queremos simplificarlo. ¿Cuáles salen?</p>
+      </div>
+      <button class="naive-switch" type="button" data-naive="p5" aria-pressed="false">Ver la versión con error</button>
+      <div class="naive-banner" id="p5-naive-banner" hidden><b>Versión con error:</b> una torta con 24 porciones y 24 colores. No se puede comparar ninguna porción con otra, los colores se repiten a la vista y la leyenda obliga a ir y volver.</div>
+      <div class="q__grid">
+        <div class="fig" id="p5-good">
+          <span class="fig__title">Ventas del semestre por producto (millones de pesos), de mayor a menor</span>
+          <div class="legend" id="p5-legend"></div>
+          <div class="canvas-box canvas-box--tall"><canvas id="c-p5"></canvas></div>
+        </div>
+        <div class="fig" id="p5-bad" hidden>
+          <span class="fig__title">Participación de cada producto en las ventas</span>
+          <div class="canvas-box canvas-box--tall"><canvas id="c-p5-bad"></canvas></div>
+        </div>
+        <div class="fig">
+          <span class="fig__title">Productos que aportan menos del 2 % de las ventas</span>
+          <div class="tbl-wrap"><table class="tbl-sm"><thead><tr><th>Producto</th><th class="num">% ventas</th><th class="num">% unidades</th><th>Decisión</th></tr></thead><tbody id="p5-table"></tbody></table></div>
+          <span class="fig__note">Un producto barato puede vender poco en pesos y mucho en unidades: atrae clientes que compran algo más. Por eso se revisan las dos columnas antes de decidir.</span>
+        </div>
+      </div>
+      <p class="decision" id="p5-decision"></p>
+      <details class="why">
+        <summary>Por qué se diseñó así</summary>
+        <div class="why__body">
+          <div class="why__row"><span class="why__k">Intención</span><span>Ordenar muchas categorías por su aporte (distribución tipo Pareto) e identificar la cola.</span></div>
+          <div class="why__row"><span class="why__k">Gráficos</span><span><b>Barras horizontales ordenadas</b>: con 24 categorías es la única forma de leer todos los nombres sin girarlos. Una <b>tabla</b> para los candidatos, porque ahí se necesitan dos cifras por producto.</span></div>
+          <div class="why__row"><span class="why__k">Medida</span><span>Ventas en pesos sin pedidos corporativos (inflarían los almuerzos), y participación en unidades como segunda mirada.</span></div>
+          <div class="why__row"><span class="why__k">Color</span><span>Gris para los productos que se quedan, naranja para los que salen y azul para el caso que merece discusión (poco en pesos, mucho en unidades). El color es la recomendación.</span></div>
+          <div class="why__row"><span class="why__k">Ejes y orden</span><span>Orden de mayor a menor (categoría nominal: el orden lo da el valor). Eje desde cero.</span></div>
+          <div class="why__row"><span class="why__k">Descartado</span><span>Torta de 24 porciones. Barras verticales con nombres girados 45°. Una línea de % acumulado en un segundo eje: dos escalas en un gráfico inventan relaciones.</span></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ P6 ============ -->
+    <section class="q" id="p6">
+      <div class="q__head">
+        <span class="q__tag">P6 · Turnos</span>
+        <h2 class="q__title" id="p6-title">—</h2>
+        <p class="q__sub">¿Cómo redistribuimos el personal entre sedes según el día de la semana?</p>
+      </div>
+      <button class="naive-switch" type="button" data-naive="p6" aria-pressed="false">Ver la versión con error</button>
+      <div class="naive-banner" id="p6-naive-banner" hidden><b>Versión con error:</b> ventas totales de la cadena por día, con los días en orden alfabético y sumando en lugar de promediar por día abierto. Se pierde la semana, se mezclan sedes con patrones opuestos y los festivos y cierres distorsionan los totales.</div>
+      <div class="fig" id="p6-good">
+        <span class="fig__title">Ventas por día abierto, por sede y día de la semana (miles de pesos)</span>
+        <div class="heat-scroll"><div class="heat heat--7" id="heat6"></div></div>
+        <div class="heat-scale"><span>menos ventas</span><span class="heat-scale__bar" id="heat6-scale"></span><span>más ventas</span></div>
+        <span class="fig__note">Borde azul: el mejor día de cada sede. «Cerrado» no es cero: la sede no abre ese día. Con el interruptor de pedidos corporativos encendido, el martes de Centro se dispara.</span>
+      </div>
+      <div class="fig" id="p6-bad" hidden>
+        <span class="fig__title">Ventas totales de la cadena por día</span>
+        <div class="canvas-box"><canvas id="c-p6-bad"></canvas></div>
+      </div>
+      <p class="decision" id="p6-decision"></p>
+      <details class="why">
+        <summary>Por qué se diseñó así</summary>
+        <div class="why__body">
+          <div class="why__row"><span class="why__k">Intención</span><span>Ver un patrón en dos dimensiones (sede × día) para decidir turnos.</span></div>
+          <div class="why__row"><span class="why__k">Gráficos</span><span><b>Mapa de calor</b> con el número en cada celda: es una tabla que se lee por color y por cifra. Cinco líneas cruzadas serían ilegibles.</span></div>
+          <div class="why__row"><span class="why__k">Medida</span><span><b>Ventas por día abierto</b>. Centro cierra domingos y festivos, y los lunes festivos son frecuentes en Colombia: sumar castigaría a los lunes y a Centro.</span></div>
+          <div class="why__row"><span class="why__k">Color</span><span>Secuencial de un solo tono. El borde azul marca el pico de cada sede, que es lo que define el turno fuerte.</span></div>
+          <div class="why__row"><span class="why__k">Ejes y orden</span><span>Días de lunes a domingo. Un orden alfabético (Domingo, Jueves, Lunes…) rompe la lectura de la semana.</span></div>
+          <div class="why__row"><span class="why__k">Cuidado</span><span>Los pedidos corporativos caen entre semana en Centro. Por eso se excluyen: un martes con cuatro pedidos grandes no es un patrón.</span></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ P7 ============ -->
+    <section class="q" id="p7">
+      <div class="q__head">
+        <span class="q__tag">P7 · Bonus · Clientes</span>
+        <h2 class="q__title" id="p7-title">—</h2>
+        <p class="q__sub">¿Quiénes son nuestros clientes de mayor valor y qué tan satisfechos están?</p>
+      </div>
+      <button class="naive-switch" type="button" data-naive="p7" aria-pressed="false">Ver la versión con error</button>
+      <div class="naive-banner" id="p7-naive-banner" hidden><b>Versión con error:</b> los rangos de edad en orden alfabético, con «Menos de 18» al final, y la satisfacción como promedio. El orden de las edades se rompe y el promedio de 4,1 vs. 4,4 no dice cuántos clientes están molestos.</div>
+      <div class="q__grid">
+        <div class="fig">
+          <span class="fig__title">Ticket promedio por tipo de cliente (miles de pesos)</span>
+          <div class="canvas-box canvas-box--short"><canvas id="c-p7a"></canvas></div>
+        </div>
+        <div class="fig">
+          <span class="fig__title" id="p7b-title">Cómo califican, por tipo de cliente (% de respuestas)</span>
+          <div class="legend" id="p7-legend"></div>
+          <div class="canvas-box canvas-box--short"><canvas id="c-p7b"></canvas></div>
+        </div>
+      </div>
+      <div class="fig">
+        <span class="fig__title">Ticket mediano por rango de edad (miles de pesos)</span>
+        <div class="canvas-box canvas-box--short"><canvas id="c-p7c"></canvas></div>
+        <span class="fig__note">Mediana porque unos pocos tickets grandes inflan el promedio. Los rangos van de menor a mayor edad.</span>
+      </div>
+      <p class="decision" id="p7-decision"></p>
+      <details class="why">
+        <summary>Por qué se diseñó así</summary>
+        <div class="why__body">
+          <div class="why__row"><span class="why__k">Intención</span><span>Comparar valor y satisfacción entre segmentos ordenados.</span></div>
+          <div class="why__row"><span class="why__k">Gráficos</span><span><b>Barras</b> para el ticket (comparar magnitudes). <b>Barras apiladas al 100 %</b> para la escala Likert agrupada en tres niveles: muestran cuántos están molestos, neutrales y contentos, no solo un promedio.</span></div>
+          <div class="why__row"><span class="why__k">Medida</span><span>Ticket promedio sin corporativos por tipo de cliente; mediana por rango de edad; Likert agrupada en 1–2, 3 y 4–5.</span></div>
+          <div class="why__row"><span class="why__k">Color</span><span>Fidelizado en azul (el foco). En la Likert, naranja = insatisfecho, gris claro = neutral, azul = satisfecho: dos polos opuestos y un centro neutro.</span></div>
+          <div class="why__row"><span class="why__k">Ejes y orden</span><span>Tipos de cliente de menor a mayor vínculo (Nuevo → Recurrente → Fidelizado); edades de menor a mayor. Barras desde cero.</span></div>
+          <div class="why__row"><span class="why__k">Descartado</span><span>Promedio de satisfacción por segmento. Torta de tipos de cliente (no responde la pregunta de valor).</span></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ============ TRAMPAS ============ -->
+    <section class="q" id="trampas">
+      <div class="q__head">
+        <span class="q__tag">Calidad de datos</span>
+        <h2 class="q__title">Seis trampas que este tablero trata a propósito</h2>
+        <p class="q__sub">Cada regla está escrita en el DESIGN.md y el código la aplica sobre el archivo cargado.</p>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Trampa</th><th>Evidencia en estos datos</th><th>Cómo se trató</th></tr></thead>
+          <tbody id="trampas-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+  </div>
+
+  <p class="foot">Ejemplo resuelto · Visualización y Data Storytelling · Universidad Icesi · Datos ficticios con fines académicos</p>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function () {
+  // ---------- Constantes del DESIGN.md ----------
+  var REQUIRED = ['fecha','mes','dia_semana','franja_horaria','sede','canal','categoria','producto','cantidad','precio_unitario','descuento_pct','total_venta','tipo_cliente','rango_edad','tiempo_espera_min','satisfaccion','temperatura_c','lluvia'];
+  var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var MES_C = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var FRANJAS = ['Mañana','Media mañana','Almuerzo','Tarde','Noche'];
+  var DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  var TRAMOS = [[0,4,'0–4'],[4,6,'4–6'],[6,8,'6–8'],[8,10,'8–10'],[10,15,'10–15'],[15,1e9,'15+']];
+  var META_ESPERA = 8;          // minutos
+  var UMBRAL_CORP = 20;         // unidades por línea
+  var SEDE_FOCO = 'El Peñón';
+  var css = getComputedStyle(document.documentElement);
+  var C = { accent: css.getPropertyValue('--accent').trim(), context: css.getPropertyValue('--context').trim(),
+            warn: css.getPropertyValue('--warn').trim(), ink2: css.getPropertyValue('--ink-2').trim(),
+            ink3: css.getPropertyValue('--ink-3').trim(), line: css.getPropertyValue('--line').trim() };
+  var SEQ = ['#e3e7fb','#c3cbf6','#9da7ef','#7479e4','#4f4fc8','#33349a']; // un solo tono, claro → oscuro
+  var CANAL_COLOR = { 'App': C.accent, 'Domicilio': '#f0a07f', 'Mostrador': C.context };
+  var CANAL_ORDEN = ['App','Domicilio','Mostrador'];
+
+  Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = C.ink2;
+  Chart.defaults.plugins.legend.display = false;
+  Chart.defaults.plugins.tooltip.backgroundColor = '#1d1d2c';
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.maintainAspectRatio = false;
+
+  var $ = function (id) { return document.getElementById(id); };
+  function yList(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' y ' + a[a.length - 1]; }
+  var RAW = [], charts = {}, naive = { p1: false, p2: false, p3: false, p4: false, p5: false, p6: false, p7: false };
+
+  // ---------- Formatos ----------
+  var nf0 = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+  var nf1 = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  function cop(v) { return '$' + nf0.format(Math.round(v)); }
+  function miles(v) { return '$' + nf0.format(Math.round(v / 1000)) + ' mil'; }
+  function millones(v) { return '$' + nf1.format(v / 1e6) + ' M'; }
+  function pct(v) { return nf0.format(Math.round(v * 100)) + ' %'; }
+  function median(a) { if (!a.length) return NaN; var s = a.slice().sort(function (x, y) { return x - y; }); var m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+  function sum(a) { return a.reduce(function (s, x) { return s + x; }, 0); }
+  function mean(a) { return a.length ? sum(a) / a.length : NaN; }
+
+  // ---------- Carga ----------
+  function setStatus(msg, err) { var s = $('status'); s.textContent = msg; s.className = 'status' + (err ? ' err' : ''); }
+  $('pick').addEventListener('click', function () { $('file').click(); });
+  $('file').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var name = f.name.toLowerCase();
+    if (name.endsWith('.csv')) {
+      Papa.parse(f, { header: true, skipEmptyLines: true, complete: function (r) { ingest(r.data, f.name); } });
+    } else {
+      var rd = new FileReader();
+      rd.onload = function (ev) {
+        try {
+          var wb = XLSX.read(ev.target.result, { type: 'array', cellDates: true });
+          var sh = wb.Sheets['ventas'] || wb.Sheets[wb.SheetNames[0]];
+          ingest(XLSX.utils.sheet_to_json(sh, { defval: '' }), f.name);
+        } catch (err) { setStatus('No pude leer el Excel. ¿Es un .xlsx válido?', true); }
+      };
+      rd.readAsArrayBuffer(f);
+    }
+    e.target.value = '';
+  });
+
+  function toISO(v) {
+    if (v instanceof Date) { var d = new Date(v.getTime() - v.getTimezoneOffset() * 60000); return d.toISOString().slice(0, 10); }
+    return String(v).slice(0, 10);
+  }
+  function num(v) { if (v === '' || v === null || v === undefined) return null; var n = Number(String(v).replace(',', '.')); return isNaN(n) ? null : n; }
+
+  function ingest(rows, fname) {
+    if (!rows.length) { setStatus('El archivo no tiene filas.', true); return; }
+    var cols = Object.keys(rows[0]).map(function (c) { return c.trim(); });
+    var missing = REQUIRED.filter(function (c) { return cols.indexOf(c) < 0; });
+    if (missing.length) { setStatus('Faltan columnas: ' + missing.join(', ') + '. Revisa que cargaste la hoja «ventas».', true); return; }
+    RAW = rows.map(function (r) {
+      var o = {};
+      for (var k in r) o[k.trim()] = r[k];
+      return {
+        fecha: toISO(o.fecha), mes: num(o.mes), dia: String(o.dia_semana).trim(), franja: String(o.franja_horaria).trim(),
+        sede: String(o.sede).trim(), canal: String(o.canal).trim(), cantidad: num(o.cantidad) || 0,
+        precio: num(o.precio_unitario) || 0, desc: num(o.descuento_pct) || 0, total: num(o.total_venta) || 0,
+        espera: num(o.tiempo_espera_min), sat: num(o.satisfaccion),
+        cat: String(o.categoria).trim(), prod: String(o.producto).trim(), tipo: String(o.tipo_cliente).trim(),
+        edad: String(o.rango_edad).trim(), temp: num(o.temperatura_c), lluvia: String(o.lluvia).trim()
+      };
+    }).filter(function (r) { return r.fecha && r.sede; });
+    setStatus(nf0.format(RAW.length) + ' filas cargadas de «' + fname + '».');
+    $('empty').hidden = true; $('dash').hidden = false;
+    render();
+  }
+
+  $('incl-corp').addEventListener('change', render);
+  document.querySelectorAll('.naive-switch').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var k = b.dataset.naive; naive[k] = !naive[k];
+      b.setAttribute('aria-pressed', naive[k]); b.textContent = naive[k] ? 'Volver a la versión correcta' : 'Ver la versión con error';
+      $(k + '-naive-banner').hidden = !naive[k];
+      render();
+    });
+  });
+
+  // ---------- Cálculos ----------
+  function data() {
+    var incl = $('incl-corp').checked;
+    return incl ? RAW : RAW.filter(function (r) { return r.cantidad < UMBRAL_CORP; });
+  }
+  function sedesList(d) {
+    var tot = {}; d.forEach(function (r) { tot[r.sede] = (tot[r.sede] || 0) + r.total; });
+    return Object.keys(tot).sort(function (a, b) { return tot[b] - tot[a]; });
+  }
+  function monthsList(d) { var m = {}; d.forEach(function (r) { m[r.mes] = 1; }); return Object.keys(m).map(Number).sort(function (a, b) { return a - b; }); }
+  function perDay(rows) { var days = {}; rows.forEach(function (r) { days[r.fecha] = 1; }); var n = Object.keys(days).length; return n ? sum(rows.map(function (r) { return r.total; })) / n : null; }
+
+  function destroy(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+  var gridX = { grid: { display: false }, border: { color: C.line } };
+  function gridY(extra) { return Object.assign({ grid: { color: C.line }, border: { display: false }, beginAtZero: true }, extra || {}); }
+
+  function render() {
+    if (!RAW.length) return;
+    var d = data(), sedes = sedesList(RAW), meses = monthsList(d);
+    var r1 = renderP1(d, sedes), r2 = renderP2(d, sedes, meses), r3 = renderP3(d, meses);
+    renderP4(d); renderP5(d); renderP6(d, sedes); renderP7(d);
+    renderResumen();
+    renderKPIs(d, meses, r1, r2, r3);
+    renderTrampas();
+    $('bigidea').innerHTML = '<b>' + r1.sede + ' necesita un barista al ' + r1.franja.toLowerCase() + '</b>, ' +
+      (r2.ok ? '<b>' + SEDE_FOCO + ' ya vende al nivel de las demás sedes</b>' : '<b>' + SEDE_FOCO + ' todavía no alcanza a las demás sedes</b>') +
+      ' y <b>la App crece mientras las sedes antiguas venden menos por día</b>: el descuento merece revisión.';
+  }
+
+  // P1 ---------------------------------------------------------
+  function renderP1(d, sedes) {
+    var tienda = d.filter(function (r) { return r.canal !== 'Domicilio' && r.espera !== null; });
+    var cells = {}, max = { v: -1 };
+    sedes.forEach(function (s) { FRANJAS.forEach(function (f) {
+      var rows = tienda.filter(function (r) { return r.sede === s && r.franja === f; });
+      var w = rows.map(function (r) { return r.espera; });
+      var sats = rows.filter(function (r) { return r.sat !== null; }).map(function (r) { return r.sat; });
+      var c = { m: median(w), n: rows.length, top2: sats.length ? sats.filter(function (x) { return x >= 4; }).length / sats.length : NaN, ns: sats.length };
+      cells[s + '|' + f] = c;
+      if (c.m > max.v) max = { v: c.m, s: s, f: f };
+    }); });
+    var vals = Object.keys(cells).map(function (k) { return cells[k].m; }).filter(isFinite);
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    var heat = $('heat'); heat.innerHTML = '<div></div>' + FRANJAS.map(function (f) { return '<div class="heat__h">' + f + '</div>'; }).join('');
+    sedes.forEach(function (s) {
+      heat.insertAdjacentHTML('beforeend', '<div class="heat__r">' + s + '</div>');
+      FRANJAS.forEach(function (f) {
+        var c = cells[s + '|' + f];
+        var i = isFinite(c.m) ? Math.min(SEQ.length - 1, Math.floor((c.m - lo) / (hi - lo + 1e-9) * SEQ.length)) : -1;
+        var bg = i < 0 ? '#f3f3f6' : SEQ[i], fg = i >= 3 ? '#fff' : '#1d1d2c';
+        var cls = 'heat__c' + (s === max.s && f === max.f ? ' is-max' : '');
+        var tip = s + ' · ' + f + '<br>Mediana: ' + (isFinite(c.m) ? nf1.format(c.m) + ' min' : 's. d.') + '<br>Ventas en tienda: ' + nf0.format(c.n) +
+          (c.ns ? '<br>Satisfechos (4–5): ' + pct(c.top2) + ' de ' + c.ns + ' respuestas' : '');
+        heat.insertAdjacentHTML('beforeend', '<div class="' + cls + '" style="background:' + bg + ';color:' + fg + '" data-tip="' + tip + '" tabindex="0">' + (isFinite(c.m) ? nf1.format(c.m) : '—') + '</div>');
+      });
+    });
+    $('heat-scale').innerHTML = SEQ.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('');
+
+    // barras por tramo
+    var resp = tienda.filter(function (r) { return r.sat !== null; });
+    var tr = TRAMOS.map(function (t) {
+      var g = resp.filter(function (r) { return (t[0] === 0 ? r.espera >= 0 : r.espera > t[0]) && r.espera <= t[1]; });
+      return { lab: t[2], n: g.length, p: g.length ? g.filter(function (r) { return r.sat <= 2; }).length / g.length : 0, over: t[0] >= META_ESPERA };
+    });
+    destroy('p1'); destroy('p1bad');
+    $('p1-good-a').hidden = naive.p1; $('p1-good-b').hidden = naive.p1; $('p1-bad').hidden = !naive.p1;
+    if (!naive.p1) {
+      charts.p1 = new Chart($('c-p1'), {
+        type: 'bar',
+        data: { labels: tr.map(function (t) { return t.lab + ' min'; }), datasets: [{ data: tr.map(function (t) { return t.p * 100; }),
+          backgroundColor: tr.map(function (t) { return t.over ? C.warn : C.context; }), borderRadius: 4, maxBarThickness: 46 }] },
+        options: { scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return v + ' %'; } } }) },
+          plugins: { tooltip: { callbacks: { label: function (c) { var t = tr[c.dataIndex]; return nf1.format(t.p * 100) + ' % insatisfechos · ' + t.n + ' respuestas'; } } } } }
+      });
+      var last = tr[tr.length - 1], safe = tr.filter(function (t) { return !t.over; });
+      $('p1-note').textContent = 'Naranja: tramos por encima de la meta de ' + META_ESPERA + ' min. Hasta ' + META_ESPERA + ' min, a lo sumo ' + pct(Math.max.apply(null, safe.map(function (t) { return t.p; }))) + ' califica 1–2; con más de 15 min, ' + pct(last.p) + '. Solo responde la encuesta ' + pct(resp.length / tienda.length) + ' de los clientes en tienda.';
+    } else {
+      var avg = sedes.map(function (s) { return mean(d.filter(function (r) { return r.sede === s && r.sat !== null; }).map(function (r) { return r.sat; })); });
+      charts.p1bad = new Chart($('c-p1-bad'), {
+        type: 'bar',
+        data: { labels: sedes, datasets: [{ data: avg, backgroundColor: ['#e9683b','#f2c14e','#4cb979','#865cf0','#5454e9'], borderRadius: 0 }] },
+        options: { scales: { x: gridX, y: { min: 3.8, max: 4.5, grid: { color: C.line } } } }
+      });
+    }
+    var other = sedes.filter(function (s) { return s !== max.s; }).map(function (s) { return cells[s + '|' + max.f].m; });
+    var ratio = max.v / median(other);
+    $('p1-title').textContent = max.s + ' hace esperar ' + nf1.format(max.v) + ' minutos al ' + max.f.toLowerCase() + (ratio >= 1.6 ? ', casi el doble que las demás sedes' : ', más que cualquier otra sede');
+    var c = cells[max.s + '|' + max.f];
+    $('p1-decision').innerHTML = '<b>Decisión:</b> contratar el barista para <b>' + max.s + ', franja ' + max.f.toLowerCase() + ' de lunes a viernes</b>. Allí la mediana de espera es ' + nf1.format(max.v) + ' min (las demás sedes en esa franja: ' + nf1.format(Math.min.apply(null, other)) + '–' + nf1.format(Math.max.apply(null, other)) + ' min) y solo ' + pct(c.top2) + ' de quienes responden queda satisfecho. Complementar empujando la recogida por App, que espera menos.';
+    return { sede: max.s, franja: max.f, v: max.v };
+  }
+
+  // P2 ---------------------------------------------------------
+  function renderP2(d, sedes, meses) {
+    var series = sedes.map(function (s) {
+      return { s: s, v: meses.map(function (m) { return perDay(d.filter(function (r) { return r.sede === s && r.mes === m; })); }) };
+    });
+    // la sede en foco al final para que se dibuje encima
+    series.sort(function (a, b) { return (a.s === SEDE_FOCO) - (b.s === SEDE_FOCO); });
+    destroy('p2'); destroy('p2b');
+    var lastM = meses[meses.length - 1];
+    $('p2-legend').hidden = naive.p2;
+    $('p2-legend').innerHTML = '<span><i style="background:' + C.accent + '"></i>' + SEDE_FOCO + '</span><span><i style="background:' + C.context + '"></i>Otras sedes</span>';
+    if (!naive.p2) {
+      $('p2-fig-title').textContent = 'Ventas por día abierto, por mes (miles de pesos)';
+      charts.p2 = new Chart($('c-p2'), {
+        type: 'line',
+        data: { labels: meses.map(function (m) { return MES_C[m - 1]; }), datasets: series.map(function (x) {
+          var f = x.s === SEDE_FOCO;
+          return { label: x.s, data: x.v.map(function (v) { return v === null ? null : v / 1000; }), borderColor: f ? C.accent : C.context, backgroundColor: f ? C.accent : C.context,
+            borderWidth: f ? 3 : 2, pointRadius: f ? 4 : 0, pointHoverRadius: 6, spanGaps: false, tension: .2 };
+        }) },
+        options: { interaction: { mode: 'index', intersect: false }, scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return '$' + v + ' mil'; } } }) },
+          plugins: { tooltip: { itemSort: function (a, b) { return b.raw - a.raw; }, callbacks: { label: function (c) { return c.dataset.label + ': ' + (c.raw === null ? 'no abría' : '$' + nf0.format(c.raw) + ' mil'); } } } } }
+      });
+    } else {
+      $('p2-fig-title').textContent = 'Ventas totales del semestre por sede';
+      var tot = sedes.map(function (s) { return sum(d.filter(function (r) { return r.sede === s; }).map(function (r) { return r.total; })); });
+      charts.p2 = new Chart($('c-p2'), {
+        type: 'bar', data: { labels: sedes, datasets: [{ data: tot.map(function (v) { return v / 1e6; }), backgroundColor: sedes.map(function (s) { return s === SEDE_FOCO ? C.warn : C.context; }), borderRadius: 4 }] },
+        options: { scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return '$' + v + ' M'; } } }) } }
+      });
+    }
+    var lastVals = series.map(function (x) { return { s: x.s, v: x.v[x.v.length - 1] || 0 }; }).sort(function (a, b) { return b.v - a.v; });
+    charts.p2b = new Chart($('c-p2b'), {
+      type: 'bar',
+      data: { labels: lastVals.map(function (x) { return x.s; }), datasets: [{ data: lastVals.map(function (x) { return x.v / 1000; }), backgroundColor: lastVals.map(function (x) { return x.s === SEDE_FOCO ? C.accent : C.context; }), borderRadius: 4, maxBarThickness: 30 }] },
+      options: { indexAxis: 'y', scales: { y: { grid: { display: false }, border: { color: C.line } }, x: gridY({ ticks: { maxRotation: 0, maxTicksLimit: 5, callback: function (v) { return '$' + v + ' mil'; } } }) },
+        plugins: { tooltip: { callbacks: { label: function (c) { return '$' + nf0.format(c.raw) + ' mil por día'; } } } } }
+    });
+    var foco = series.filter(function (x) { return x.s === SEDE_FOCO; })[0];
+    var firstIdx = foco ? foco.v.findIndex(function (v) { return v !== null; }) : -1;
+    var first = firstIdx >= 0 ? foco.v[firstIdx] : 0, last = foco ? foco.v[foco.v.length - 1] : 0;
+    var others = lastVals.filter(function (x) { return x.s !== SEDE_FOCO; }).map(function (x) { return x.v; });
+    var minOther = Math.min.apply(null, others);
+    var ok = last >= minOther * 0.85;
+    $('p2-title').textContent = SEDE_FOCO + ' pasó de ' + miles(first) + ' a ' + miles(last) + ' por día y ya está cerca de las sedes consolidadas';
+    $('p2-decision').innerHTML = '<b>Decisión:</b> ' + (ok ? '<b>mantener ' + SEDE_FOCO + '</b>' : '<b>mantener ' + SEDE_FOCO + ' en observación</b>') + '. En totales parece la peor sede, pero solo abrió ' + (meses.length - firstIdx) + ' de ' + meses.length + ' meses. Por día abierto subió ' + pct(last / first - 1) + ' desde su primer mes y en ' + MESES[lastM - 1].toLowerCase() + ' vendió ' + miles(last) + ' frente a ' + miles(minOther) + ' de la sede consolidada más baja. Revisar de nuevo al cumplir 6 meses.';
+    return { first: first, last: last, ok: ok, minOther: minOther };
+  }
+
+  // P3 ---------------------------------------------------------
+  function renderP3(d, meses) {
+    var orden = meses.slice();
+    if (naive.p3) orden.sort(function (a, b) { return MESES[a - 1].localeCompare(MESES[b - 1], 'es'); });
+    var share = {}; CANAL_ORDEN.forEach(function (c) { share[c] = []; });
+    orden.forEach(function (m) {
+      var g = d.filter(function (r) { return r.mes === m; });
+      CANAL_ORDEN.forEach(function (c) { share[c].push(g.length ? g.filter(function (r) { return r.canal === c; }).length / g.length * 100 : 0); });
+    });
+    $('p3-legend').innerHTML = CANAL_ORDEN.map(function (c) { return '<span><i style="background:' + CANAL_COLOR[c] + '"></i>' + c + '</span>'; }).join('');
+    destroy('p3');
+    charts.p3 = new Chart($('c-p3'), {
+      type: 'bar',
+      data: { labels: orden.map(function (m) { return naive.p3 ? MESES[m - 1] : MES_C[m - 1]; }), datasets: CANAL_ORDEN.map(function (c) {
+        return { label: c, data: share[c], backgroundColor: CANAL_COLOR[c], borderColor: '#ffffff', borderWidth: { top: 2, bottom: 0, left: 0, right: 0 }, borderSkipped: false, maxBarThickness: 54 };
+      }) },
+      options: { scales: { x: Object.assign({ stacked: true }, gridX), y: gridY({ stacked: true, max: 100, ticks: { callback: function (v) { return v + ' %'; } } }) },
+        plugins: { tooltip: { mode: 'index', intersect: false, callbacks: { label: function (c) { return c.dataset.label + ': ' + nf1.format(c.raw) + ' %'; } } } } }
+    });
+    var nc = d.filter(function (r) { return r.cantidad < UMBRAL_CORP; });
+    var tApp = mean(nc.filter(function (r) { return r.canal === 'App'; }).map(function (r) { return r.total; }));
+    var tMos = mean(nc.filter(function (r) { return r.canal === 'Mostrador'; }).map(function (r) { return r.total; }));
+    var app = d.filter(function (r) { return r.canal === 'App'; });
+    var descuento = sum(app.map(function (r) { return r.precio * r.cantidad - r.total; }));
+    var m0 = meses[0], m1 = meses[meses.length - 1];
+    var viejas = d.filter(function (r) { return r.sede !== SEDE_FOCO; });
+    var vd0 = perDay(viejas.filter(function (r) { return r.mes === m0; })), vd1 = perDay(viejas.filter(function (r) { return r.mes === m1; }));
+    var chron = meses.map(function (m) { var g = d.filter(function (r) { return r.mes === m; }); return g.length ? g.filter(function (r) { return r.canal === 'App'; }).length / g.length : 0; });
+    var appLast = chron[chron.length - 1];
+    var delta = vd1 / vd0 - 1;
+    $('p3-kpis').innerHTML =
+      '<div class="kpi"><span class="kpi__label">Ticket App</span><span class="kpi__value">' + miles(tApp) + '</span><span class="kpi__ctx">vs ' + miles(tMos) + ' en mostrador</span></div>' +
+      '<div class="kpi"><span class="kpi__label">Descuento otorgado</span><span class="kpi__value is-warn">' + millones(descuento) + '</span><span class="kpi__ctx">en el semestre</span></div>' +
+      '<div class="kpi"><span class="kpi__label">Ventas/día sedes antiguas</span><span class="kpi__value' + (delta < 0 ? ' is-warn' : '') + '">' + (delta >= 0 ? '+' : '') + nf1.format(delta * 100) + ' %</span><span class="kpi__ctx">' + MES_C[m0 - 1] + ' ' + miles(vd0) + ' → ' + MES_C[m1 - 1] + ' ' + miles(vd1) + '</span></div>' +
+      '<div class="kpi"><span class="kpi__label">App en ' + MES_C[m1 - 1] + '</span><span class="kpi__value is-accent">' + pct(appLast) + '</span><span class="kpi__ctx">de las ventas registradas</span></div>';
+    $('p3-note').textContent = 'Sedes antiguas = todas menos ' + SEDE_FOCO + '. Si la App trajera clientes nuevos, estas sedes venderían más por día; venden menos. Hay dos explicaciones posibles y no se excluyen: la App mueve clientes del mostrador con descuento y ' + SEDE_FOCO + ' atrae parte de la clientela de otras sedes.';
+    $('p3-title').textContent = 'La App ya es ' + pct(appLast) + ' de las ventas, pero las sedes antiguas venden ' + (delta < 0 ? nf0.format(Math.abs(delta * 100)) + ' % menos' : 'apenas ' + nf0.format(delta * 100) + ' % más') + ' por día que en ' + MESES[m0 - 1].toLowerCase();
+    $('p3-decision').innerHTML = '<b>Decisión:</b> <b>bajar el descuento al 10 % y limitarlo a franjas de baja demanda</b> (tarde y noche). La App sí aporta: reduce la espera y descongestiona el mostrador. Pero un 15 % general costó ' + millones(descuento) + ' mientras las ventas por día de las sedes antiguas ' + (delta < 0 ? 'caían ' : 'subían apenas ') + nf1.format(Math.abs(delta * 100)) + ' %. Medir en tres meses si la participación de la App se sostiene con menos descuento.';
+    return { appLast: appLast, descuento: descuento };
+  }
+
+  // ---------- Mapa de calor reutilizable ----------
+  function drawHeat(el, scaleEl, rowsLab, colsLab, cell, fmt, opts) {
+    var vals = []; rowsLab.forEach(function (r) { colsLab.forEach(function (c) { var v = cell(r, c).v; if (isFinite(v)) vals.push(v); }); });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    el.innerHTML = '<div></div>' + colsLab.map(function (c) { return '<div class="heat__h">' + c + '</div>'; }).join('');
+    rowsLab.forEach(function (r) {
+      el.insertAdjacentHTML('beforeend', '<div class="heat__r">' + r + '</div>');
+      colsLab.forEach(function (c) {
+        var x = cell(r, c), v = x.v;
+        if (!isFinite(v)) { el.insertAdjacentHTML('beforeend', '<div class="heat__c heat__c--closed" data-tip="' + r + ' · ' + c + '<br>' + (x.empty || 'Sin datos') + '" tabindex="0">' + (x.empty || '—') + '</div>'); return; }
+        var i = Math.min(SEQ.length - 1, Math.floor((v - lo) / (hi - lo + 1e-9) * SEQ.length));
+        var cls = 'heat__c' + (opts.mark && opts.mark(r, c) ? ' ' + opts.markClass : '');
+        el.insertAdjacentHTML('beforeend', '<div class="' + cls + '" style="background:' + SEQ[i] + ';color:' + (i >= 3 ? '#fff' : '#1d1d2c') + '" data-tip="' + x.tip + '" tabindex="0">' + fmt(v) + '</div>');
+      });
+    });
+    scaleEl.innerHTML = SEQ.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('');
+  }
+
+  // P4 ---------------------------------------------------------
+  var CATS = ['Café caliente','Bebida fría','Panadería','Almuerzo','Snacks'];
+  var TEMPS = [[-99,26,'≤ 26 °C'],[26,28,'26–28 °C'],[28,30,'28–30 °C'],[30,99,'> 30 °C']];
+  function renderP4(d) {
+    var seco = d.filter(function (r) { return r.lluvia === 'No'; }), llu = d.filter(function (r) { return r.lluvia === 'Sí'; });
+    function shareCat(g, c) { return g.length ? g.filter(function (r) { return r.cat === c; }).length / g.length : 0; }
+    function shareCanal(g, c) { return g.length ? g.filter(function (r) { return r.canal === c; }).length / g.length : 0; }
+    var diasLluvia = Object.keys(llu.reduce(function (o, r) { o[r.fecha] = 1; return o; }, {})).length;
+    var diasSeco = Object.keys(seco.reduce(function (o, r) { o[r.fecha] = 1; return o; }, {})).length;
+    var domS = shareCanal(seco, 'Domicilio'), domL = shareCanal(llu, 'Domicilio');
+    var calS = shareCat(seco, 'Café caliente'), calL = shareCat(llu, 'Café caliente');
+    var friS = shareCat(seco, 'Bebida fría'), friL = shareCat(llu, 'Bebida fría');
+    $('p4-kpis').innerHTML =
+      '<div class="kpi"><span class="kpi__label">Domicilios</span><span class="kpi__value is-accent">' + pct(domS) + ' → ' + pct(domL) + '</span><span class="kpi__ctx">de las ventas, día seco → día con lluvia</span></div>' +
+      '<div class="kpi"><span class="kpi__label">Café caliente</span><span class="kpi__value is-accent">' + pct(calS) + ' → ' + pct(calL) + '</span><span class="kpi__ctx">de las ventas, día seco → día con lluvia</span></div>' +
+      '<div class="kpi"><span class="kpi__label">Días con lluvia</span><span class="kpi__value">' + diasLluvia + '</span><span class="kpi__ctx">frente a ' + diasSeco + ' días secos en el periodo</span></div>';
+    $('p4-legend').innerHTML = '<span><i style="background:' + C.context + '"></i>Día seco</span><span><i style="background:' + C.accent + '"></i>Día con lluvia</span>';
+    destroy('p4'); destroy('p4b');
+    var val = naive.p4
+      ? function (g, c) { return g.filter(function (r) { return r.cat === c; }).length; }
+      : function (g, c) { return shareCat(g, c) * 100; };
+    $('p4-fig-title').textContent = naive.p4 ? 'Número de ventas por categoría: días secos vs. días con lluvia' : 'Mezcla de categorías: días secos vs. días con lluvia (% de las ventas de cada tipo de día)';
+    charts.p4 = new Chart($('c-p4'), {
+      type: 'bar',
+      data: { labels: CATS, datasets: [
+        { label: 'Día seco', data: CATS.map(function (c) { return val(seco, c); }), backgroundColor: C.context, borderRadius: 4, maxBarThickness: 28 },
+        { label: 'Día con lluvia', data: CATS.map(function (c) { return val(llu, c); }), backgroundColor: C.accent, borderRadius: 4, maxBarThickness: 28 }
+      ] },
+      options: { scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return naive.p4 ? nf0.format(v) : v + ' %'; } } }) },
+        plugins: { tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + (naive.p4 ? nf0.format(c.raw) + ' ventas' : nf1.format(c.raw) + ' %'); } } } } }
+    });
+    var tb = TEMPS.map(function (t) { var g = d.filter(function (r) { return r.temp !== null && r.temp > t[0] && r.temp <= t[1]; }); return { lab: t[2], p: shareCat(g, 'Bebida fría'), n: g.length }; });
+    charts.p4b = new Chart($('c-p4b'), {
+      type: 'bar',
+      data: { labels: tb.map(function (t) { return t.lab; }), datasets: [{ data: tb.map(function (t) { return t.p * 100; }), backgroundColor: [SEQ[2], SEQ[3], SEQ[4], SEQ[5]], borderRadius: 4, maxBarThickness: 46 }] },
+      options: { scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return v + ' %'; } } }) },
+        plugins: { tooltip: { callbacks: { label: function (c) { return nf1.format(c.raw) + ' % bebidas frías · ' + nf0.format(tb[c.dataIndex].n) + ' ventas'; } } } } }
+    });
+    var byMonth = {}; llu.forEach(function (r) { byMonth[r.mes] = byMonth[r.mes] || {}; byMonth[r.mes][r.fecha] = 1; });
+    var peak = Object.keys(byMonth).map(Number).sort(function (a, b) { return Object.keys(byMonth[b]).length - Object.keys(byMonth[a]).length; }).slice(0, 2).sort(function (a, b) { return a - b; });
+    $('p4-note').textContent = 'Los meses con más lluvia fueron ' + peak.map(function (m) { return MESES[m - 1].toLowerCase(); }).join(' y ') + '. Bebidas frías: ' + pct(friS) + ' en días secos y ' + pct(friL) + ' con lluvia.';
+    $('p4-title').textContent = 'Con lluvia, los domicilios pasan de ' + pct(domS) + ' a ' + pct(domL) + ' y el café caliente de ' + pct(calS) + ' a ' + pct(calL) + ' de las ventas';
+    $('p4-decision').innerHTML = '<b>Decisión:</b> en temporada de lluvias, <b>reforzar domiciliarios y el inventario de café caliente</b>, y bajar la producción de bebidas frías. En días calurosos, al revés: las bebidas frías pasan de ' + pct(tb[0].p) + ' a ' + pct(tb[tb.length - 1].p) + ' de las ventas, buen momento para promocionarlas.';
+    return { domS: domS, domL: domL };
+  }
+
+  // P5 ---------------------------------------------------------
+  function renderP5(d) {
+    var by = {};
+    d.forEach(function (r) { var k = r.prod; by[k] = by[k] || { prod: k, cat: r.cat, v: 0, u: 0 }; by[k].v += r.total; by[k].u += r.cantidad; });
+    var list = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.v - a.v; });
+    var tv = sum(list.map(function (x) { return x.v; })), tu = sum(list.map(function (x) { return x.u; }));
+    list.forEach(function (x) { x.sv = x.v / tv; x.su = x.u / tu; x.estado = x.sv >= 0.02 ? 'queda' : (x.su >= 0.04 ? 'trafico' : 'sale'); });
+    var top10 = sum(list.slice(0, 10).map(function (x) { return x.sv; }));
+    var COL = { queda: C.context, sale: C.warn, trafico: C.accent };
+    destroy('p5'); destroy('p5bad');
+    $('p5-good').hidden = naive.p5; $('p5-bad').hidden = !naive.p5;
+    $('p5-legend').innerHTML = '<span><i style="background:' + C.context + '"></i>Se queda</span><span><i style="background:' + C.warn + '"></i>Sale del menú</span><span><i style="background:' + C.accent + '"></i>Se queda: atrae tráfico</span>';
+    if (!naive.p5) {
+      charts.p5 = new Chart($('c-p5'), {
+        type: 'bar',
+        data: { labels: list.map(function (x) { return x.prod; }), datasets: [{ data: list.map(function (x) { return x.v / 1e6; }), backgroundColor: list.map(function (x) { return COL[x.estado]; }), borderRadius: 3, barPercentage: 0.8, categoryPercentage: 0.9 }] },
+        options: { indexAxis: 'y', scales: { y: { grid: { display: false }, border: { color: C.line }, ticks: { autoSkip: false, font: { size: 11 } } }, x: gridY({ ticks: { maxRotation: 0, callback: function (v) { return '$' + v + ' M'; } } }) },
+          plugins: { tooltip: { callbacks: { label: function (c) { var x = list[c.dataIndex]; return millones(x.v) + ' · ' + nf1.format(x.sv * 100) + ' % de ventas · ' + nf1.format(x.su * 100) + ' % de unidades'; } } } } }
+      });
+    } else {
+      charts.p5bad = new Chart($('c-p5-bad'), {
+        type: 'pie',
+        data: { labels: list.map(function (x) { return x.prod; }), datasets: [{ data: list.map(function (x) { return x.v; }), backgroundColor: list.map(function (x, i) { return 'hsl(' + (i * 360 / list.length) + ',70%,60%)'; }), borderWidth: 0 }] },
+        options: { plugins: { legend: { display: true, position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+    }
+    var cand = list.filter(function (x) { return x.estado !== 'queda'; });
+    $('p5-table').innerHTML = cand.map(function (x) {
+      var tag = x.estado === 'sale' ? '<span class="chip chip--warn">Sale</span>' : '<span class="chip chip--accent">Se queda: tráfico</span>';
+      return '<tr><td>' + x.prod + '</td><td class="num">' + nf1.format(x.sv * 100) + ' %</td><td class="num">' + nf1.format(x.su * 100) + ' %</td><td>' + tag + '</td></tr>';
+    }).join('');
+    var sale = cand.filter(function (x) { return x.estado === 'sale'; }), traf = cand.filter(function (x) { return x.estado === 'trafico'; });
+    var unitsTop = list.slice().sort(function (a, b) { return b.u - a.u; })[0];
+    var rankV = list.indexOf(unitsTop) + 1;
+    $('p5-title').textContent = 'Los 10 productos más vendidos dejan el ' + pct(top10) + ' de los ingresos; ' + sale.length + ' productos pueden salir del menú';
+    $('p5-decision').innerHTML = '<b>Decisión:</b> retirar <b>' + yList(sale.map(function (x) { return x.prod; })) + '</b>, que juntos aportan ' + pct(sum(sale.map(function (x) { return x.sv; }))) + ' de las ventas.' +
+      (traf.length ? ' Mantener <b>' + yList(traf.map(function (x) { return x.prod; })) + '</b>: vende poco en pesos pero mucho en unidades.' : '') +
+      ' Ojo con mirar solo unidades: ' + unitsTop.prod + ' es el producto con más unidades vendidas y apenas el ' + rankV + '.º en ingresos.';
+    return { sale: sale.length };
+  }
+
+  // P6 ---------------------------------------------------------
+  function renderP6(d, sedes) {
+    var cellV = {};
+    sedes.forEach(function (s) { DIAS.forEach(function (dia) { cellV[s + '|' + dia] = perDay(d.filter(function (r) { return r.sede === s && r.dia === dia; })); }); });
+    var best = {}; sedes.forEach(function (s) { var b = null; DIAS.forEach(function (dia) { var v = cellV[s + '|' + dia]; if (v !== null && (b === null || v > cellV[s + '|' + b])) b = dia; }); best[s] = b; });
+    $('p6-good').hidden = naive.p6; $('p6-bad').hidden = !naive.p6;
+    destroy('p6bad');
+    if (!naive.p6) {
+      drawHeat($('heat6'), $('heat6-scale'), sedes, DIAS, function (s, dia) {
+        var v = cellV[s + '|' + dia];
+        if (v === null) return { v: NaN, empty: 'Cerrado' };
+        return { v: v, tip: s + ' · ' + dia + '<br>' + miles(v) + ' por día abierto' };
+      }, function (v) { return nf0.format(Math.round(v / 1000)); }, { mark: function (s, dia) { return best[s] === dia; }, markClass: 'is-peak' });
+    } else {
+      var alfa = DIAS.slice().sort(function (a, b) { return a.localeCompare(b, 'es'); });
+      var tot = alfa.map(function (dia) { return sum(d.filter(function (r) { return r.dia === dia; }).map(function (r) { return r.total; })); });
+      charts.p6bad = new Chart($('c-p6-bad'), {
+        type: 'bar', data: { labels: alfa, datasets: [{ data: tot.map(function (v) { return v / 1e6; }), backgroundColor: C.context, borderRadius: 4 }] },
+        options: { scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return '$' + v + ' M'; } } }) } }
+      });
+    }
+    function avgDays(s, ds) { var v = ds.map(function (x) { return cellV[s + '|' + x]; }).filter(function (x) { return x !== null; }); return mean(v); }
+    var LV = DIAS.slice(0, 5), FS = DIAS.slice(5);
+    var gap = sedes.map(function (s) { return { s: s, wd: avgDays(s, LV), we: avgDays(s, FS) }; });
+    var semana = gap.slice().sort(function (a, b) { return (b.wd / (b.we || b.wd * 0.01)) - (a.wd / (a.we || a.wd * 0.01)); })[0];
+    var finde = gap.slice().sort(function (a, b) { return (b.we / b.wd) - (a.we / a.wd); })[0];
+    $('p6-title').textContent = semana.s + ' vive de lunes a viernes y ' + finde.s + ' del fin de semana';
+    $('p6-decision').innerHTML = '<b>Decisión:</b> <b>mover personal de ' + semana.s + ' a ' + finde.s + ' los fines de semana</b>. ' + semana.s + ' vende ' + miles(semana.wd) + ' por día entre semana y ' + (isFinite(semana.we) ? miles(semana.we) : 'nada') + ' el fin de semana; ' + finde.s + ' pasa de ' + miles(finde.wd) + ' entre semana a ' + miles(finde.we) + ' el sábado y domingo. Evaluar además un horario reducido de ' + semana.s + ' los sábados.';
+    return { semana: semana.s, finde: finde.s };
+  }
+
+  // P7 ---------------------------------------------------------
+  var TIPOS = ['Nuevo','Recurrente','Fidelizado'];
+  var EDADES = ['Menos de 18','18-24','25-34','35-44','45-54','55 o más'];
+  function renderP7(d) {
+    var nc = d.filter(function (r) { return r.cantidad < UMBRAL_CORP; });
+    var tk = TIPOS.map(function (t) { return mean(nc.filter(function (r) { return r.tipo === t; }).map(function (r) { return r.total; })); });
+    var lik = TIPOS.map(function (t) {
+      var s = d.filter(function (r) { return r.tipo === t && r.sat !== null; }).map(function (r) { return r.sat; });
+      return { n: s.length, bajo: s.filter(function (x) { return x <= 2; }).length / (s.length || 1), medio: s.filter(function (x) { return x === 3; }).length / (s.length || 1), alto: s.filter(function (x) { return x >= 4; }).length / (s.length || 1), prom: mean(s) };
+    });
+    destroy('p7a'); destroy('p7b'); destroy('p7c');
+    charts.p7a = new Chart($('c-p7a'), {
+      type: 'bar', data: { labels: TIPOS, datasets: [{ data: tk.map(function (v) { return v / 1000; }), backgroundColor: TIPOS.map(function (t) { return t === 'Fidelizado' ? C.accent : C.context; }), borderRadius: 4, maxBarThickness: 56 }] },
+      options: { scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return '$' + v + ' mil'; } } }) }, plugins: { tooltip: { callbacks: { label: function (c) { return miles(tk[c.dataIndex]) + ' por ticket'; } } } } }
+    });
+    if (!naive.p7) {
+      $('p7b-title').textContent = 'Cómo califican, por tipo de cliente (% de respuestas)';
+      $('p7-legend').hidden = false;
+      $('p7-legend').innerHTML = '<span><i style="background:' + C.warn + '"></i>1–2 insatisfecho</span><span><i style="background:#dcdce6"></i>3 neutral</span><span><i style="background:' + C.accent + '"></i>4–5 satisfecho</span>';
+      var mk = function (lab, key, col) { return { label: lab, data: lik.map(function (x) { return x[key] * 100; }), backgroundColor: col, borderColor: '#ffffff', borderWidth: { left: 0, right: 2, top: 0, bottom: 0 }, borderSkipped: false, maxBarThickness: 30 }; };
+      charts.p7b = new Chart($('c-p7b'), {
+        type: 'bar', data: { labels: TIPOS, datasets: [mk('1–2', 'bajo', C.warn), mk('3', 'medio', '#dcdce6'), mk('4–5', 'alto', C.accent)] },
+        options: { indexAxis: 'y', scales: { x: gridY({ stacked: true, max: 100, ticks: { maxRotation: 0, callback: function (v) { return v + ' %'; } } }), y: { stacked: true, grid: { display: false }, border: { color: C.line } } },
+          plugins: { tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + nf1.format(c.raw) + ' % · ' + lik[c.dataIndex].n + ' respuestas'; } } } } }
+      });
+    } else {
+      $('p7b-title').textContent = 'Satisfacción promedio por tipo de cliente';
+      $('p7-legend').hidden = true;
+      charts.p7b = new Chart($('c-p7b'), {
+        type: 'bar', data: { labels: TIPOS, datasets: [{ data: lik.map(function (x) { return x.prom; }), backgroundColor: ['#e9683b', '#4cb979', '#865cf0'] }] },
+        options: { scales: { x: gridX, y: { min: 4, max: 4.5, grid: { color: C.line } } } }
+      });
+    }
+    var orden = naive.p7 ? EDADES.slice().sort(function (a, b) { return a.localeCompare(b, 'es'); }) : EDADES;
+    var med = orden.map(function (e) { return median(nc.filter(function (r) { return r.edad === e; }).map(function (r) { return r.total; })); });
+    var mx = Math.max.apply(null, med.filter(isFinite));
+    charts.p7c = new Chart($('c-p7c'), {
+      type: 'bar', data: { labels: orden, datasets: [{ data: med.map(function (v) { return v / 1000; }), backgroundColor: med.map(function (v) { return v === mx ? C.accent : C.context; }), borderRadius: 4, maxBarThickness: 46 }] },
+      options: { scales: { x: gridX, y: gridY({ ticks: { callback: function (v) { return '$' + nf1.format(v) + ' mil'; } } }) }, plugins: { tooltip: { callbacks: { label: function (c) { return miles(med[c.dataIndex]) + ' (mediana)'; } } } } }
+    });
+    var fi = 2, nu = 0;
+    $('p7-title').textContent = 'Los clientes fidelizados gastan ' + pct(tk[fi] / tk[nu] - 1) + ' más por ticket que los nuevos y casi no se quejan';
+    var top = orden[med.indexOf(mx)];
+    $('p7-decision').innerHTML = '<b>Decisión:</b> <b>enfocar el programa de fidelización en convertir clientes nuevos y recurrentes</b>. Un fidelizado deja ' + miles(tk[fi]) + ' por ticket frente a ' + miles(tk[nu]) + ' de un nuevo, y el ' + pct(lik[fi].alto) + ' califica 4–5 (nuevos: ' + pct(lik[nu].alto) + '). El rango de edad con mayor ticket mediano es ' + top + '.';
+    return {};
+  }
+
+  // Resumen ----------------------------------------------------
+  function renderResumen() {
+    var ids = ['p1','p2','p3','p4','p5','p6','p7'];
+    $('resumen-list').innerHTML = ids.map(function (id) {
+      var t = $(id + '-decision').innerHTML.replace(/^<b>Decisión:<\/b>\s*/, '');
+      var first = t.split('. ')[0];
+      return '<li><a href="#' + id + '">' + id.toUpperCase() + '</a><span>' + first + '.</span></li>';
+    }).join('');
+  }
+
+  // KPIs -------------------------------------------------------
+  function renderKPIs(d, meses, r1, r2, r3) {
+    var vd = perDay(d);
+    $('k1').textContent = miles(vd);
+    $('k1c').textContent = 'Promedio del semestre, ' + meses.length + ' meses';
+    $('k2').textContent = nf1.format(r1.v) + ' min';
+    $('k2c').innerHTML = '<span class="chip chip--warn">Sobre la meta</span>Meta: ' + META_ESPERA + ' min · ' + r1.sede + ', ' + r1.franja.toLowerCase();
+    $('k3').textContent = miles(r2.last);
+    $('k3c').innerHTML = (r2.ok ? '<span class="chip chip--ok">En rango</span>' : '<span class="chip chip--warn">Bajo</span>') + 'Sede consolidada más baja: ' + miles(r2.minOther);
+    $('k4').textContent = pct(r3.appLast);
+    $('k4c').textContent = 'Descuento acumulado: ' + millones(r3.descuento);
+  }
+
+  // Trampas ----------------------------------------------------
+  function renderTrampas() {
+    var corp = RAW.filter(function (r) { return r.cantidad >= UMBRAL_CORP; });
+    var share = sum(corp.map(function (r) { return r.total; })) / sum(RAW.map(function (r) { return r.total; }));
+    function centroMartes(rows) { return perDay(rows.filter(function (r) { return r.sede === 'Centro' && r.dia === 'Martes'; })); }
+    var withC = centroMartes(RAW), noC = centroMartes(RAW.filter(function (r) { return r.cantidad < UMBRAL_CORP; }));
+    var tienda = RAW.filter(function (r) { return r.canal !== 'Domicilio'; });
+    var resp = RAW.filter(function (r) { return r.sat !== null; }).length / RAW.length;
+    var waits = tienda.filter(function (r) { return r.espera !== null; }).map(function (r) { return r.espera; });
+    var alfa = DIAS.slice().sort(function (a, b) { return a.localeCompare(b, 'es'); });
+    var rows = [
+      ['Pocos registros que pesan demasiado', corp.length + ' pedidos corporativos (≥ ' + UMBRAL_CORP + ' unidades) son ' + pct(share) + ' de las ventas. Centro el martes: ' + miles(withC) + ' por día con ellos, ' + miles(noC) + ' sin ellos.', 'Excluidos por defecto en todos los cálculos; un interruptor permite incluirlos.'],
+      ['Órdenes que no son alfabéticos', 'Ordenados como texto, los días quedan: ' + alfa.join(', ') + '. Lo mismo pasa con meses, franjas y rangos de edad.', 'Orden fijo definido en el código para meses, franjas, días y tramos.'],
+      ['Periodos no comparables', 'El Peñón abrió en marzo, Centro cierra domingos y festivos, Granada cerró una semana en mayo, febrero tiene 28 días.', 'Ventas por día abierto en lugar de totales.'],
+      ['Variable sesgada', 'Espera: promedio ' + nf1.format(mean(waits)) + ' min vs mediana ' + nf1.format(median(waits)) + ' min.', 'Mediana para espera; tramos ordenados para la relación con satisfacción.'],
+      ['Escala que parece numérica', 'Satisfacción 1–5 (Likert). Solo responde ' + pct(resp) + ' de los clientes.', 'Se reporta % de 1–2 o de 4–5, nunca promedio; se advierte la tasa de respuesta.'],
+      ['Vacíos que no son ceros', 'Domicilio no tiene espera en tienda; El Peñón no tiene ventas antes de marzo.', 'Se excluyen del cálculo o se dejan como hueco en la línea, nunca como cero.']
+    ];
+    $('trampas-body').innerHTML = rows.map(function (r) { return '<tr><td><b>' + r[0] + '</b></td><td>' + r[1] + '</td><td>' + r[2] + '</td></tr>'; }).join('');
+  }
+
+  // Tooltip del mapa de calor -----------------------------------
+  var tip = $('tip');
+  function showTip(el, x, y) { tip.innerHTML = el.dataset.tip; tip.hidden = false; tip.style.left = Math.min(x + 14, window.innerWidth - 250) + 'px'; tip.style.top = (y + 14) + 'px'; }
+  document.querySelectorAll('.heat').forEach(function (h) {
+    h.addEventListener('mousemove', function (e) { var c = e.target.closest('[data-tip]'); if (c) showTip(c, e.clientX, e.clientY); else tip.hidden = true; });
+    h.addEventListener('mouseleave', function () { tip.hidden = true; });
+    h.addEventListener('focusin', function (e) { var c = e.target.closest('[data-tip]'); if (c) { var b = c.getBoundingClientRect(); showTip(c, b.left, b.bottom); } });
+    h.addEventListener('focusout', function () { tip.hidden = true; });
+  });
+
+  // ---------- Datos de ejemplo al abrir ----------
+  fetch('cafe_farallones_ventas_2026S1.csv').then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (txt) {
+    var p = Papa.parse(txt, { header: true, skipEmptyLines: true });
+    ingest(p.data, 'cafe_farallones_ventas_2026S1.csv (ejemplo)');
+  }).catch(function () {
+    setStatus('Elige el archivo de ventas (.xlsx o .csv) para empezar.');
+    $('empty').hidden = false;
+  });
+})();
+</script>
